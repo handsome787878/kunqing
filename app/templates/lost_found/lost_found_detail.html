@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}详情{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">{{ item.title }}</h3>
+    <p class="card-text">{{ item.description }}</p>
+    <p class="text-muted">类别：{{ item.category }} · 地点：{{ item.location }}</p>
+  </div>
+</div>
+{% endblock %}

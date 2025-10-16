@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}小组详情{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">{{ group.title }}</h3>
+    <p class="card-text">{{ group.goal }}</p>
+    <p class="text-muted">科目：{{ group.subject }} · 招募目标：{{ group.target_members }}</p>
+  </div>
+</div>
+{% endblock %}

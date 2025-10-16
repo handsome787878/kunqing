@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}二手书列表{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>二手书</h2>
+  <a href="{{ url_for('books.create_book') }}" class="btn btn-outline-primary">发布书籍</a>
+ </div>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  {% for book in books %}
+  <div class="col">
+    <div class="card h-100">
+      {% if book.images %}<img src="{{ book.images[0] }}" class="card-img-top" alt="...">{% endif %}
+      <div class="card-body">
+        <h5 class="card-title">{{ book.book_name }}</h5>
+        <p class="card-text text-muted">{{ book.author }} · {{ book.publisher }}</p>
+        <a href="{{ url_for('books.detail', book_id=book.id) }}" class="btn btn-primary">查看详情</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

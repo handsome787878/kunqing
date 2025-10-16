@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}注册 - Kunqing Campus{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-header">注册</div>
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.student_id.label(class="form-label") }}
+            {{ form.student_id(class="form-control", placeholder="学号") }}
+            {% for err in form.student_id.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control", placeholder="邮箱") }}
+            {% for err in form.email.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control", placeholder="密码") }}
+            {% for err in form.password.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.confirm_password.label(class="form-label") }}
+            {{ form.confirm_password(class="form-control", placeholder="确认密码") }}
+            {% for err in form.confirm_password.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.captcha.label(class="form-label") }}
+            <div class="input-group">
+              {{ form.captcha(class="form-control", placeholder="验证码") }}
+              <button class="btn btn-outline-secondary" type="button" id="sendCaptchaBtn">发送验证码</button>
+            </div>
+            {% for err in form.captcha.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+          </div>
+          {{ form.submit(class="btn btn-primary w-100") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('sendCaptchaBtn')?.addEventListener('click', async () => {
+  const emailInput = document.querySelector('input[name="email"]');
+  const email = emailInput?.value || '';
+  if (!email) { alert('请先填写邮箱'); return; }
+  const formData = new FormData(); formData.append('email', email);
+  const res = await fetch('{{ url_for('auth.send_register_captcha') }}', { method: 'POST', body: formData });
+  const data = await res.json();
+  alert(data.sent ? '验证码已发送' : '验证码发送失败');
+});
+</script>
+{% endblock %}

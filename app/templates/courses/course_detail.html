@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}课程详情{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>{{ course.course_name }}</h2>
+  <a href="{{ url_for('courses.publish_review', course_id=course.id) }}" class="btn btn-outline-primary">发布评价</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">课程信息</h5>
+        <p class="card-text">{{ course.description }}</p>
+        <p class="text-muted">教师：{{ course.teacher }} · 学院：{{ course.college }} · 学分：{{ course.credit }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">评价统计</h5>
+        {% if count %}
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">平均综合评分：{{ '%.1f'|format(avg_rating) }}</li>
+          <li class="list-group-item">平均难度：{{ '%.1f'|format(avg_diff) }}</li>
+          <li class="list-group-item">平均工作量：{{ '%.1f'|format(avg_work) }}</li>
+          <li class="list-group-item">评价总数：{{ count }}</li>
+        </ul>
+        {% else %}
+        <p class="text-muted">暂无评价</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4">
+  <h4>评价列表</h4>
+  <div class="list-group">
+    {% for r in reviews %}
+    <div class="list-group-item">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1">综合 {{ r.rating }} / 难度 {{ r.difficulty }} / 工作量 {{ r.workload }}</h5>
+        <small class="text-muted">{{ r.create_time.strftime('%Y-%m-%d') }}</small>
+      </div>
+      <p class="mb-1">{{ r.content }}</p>
+      {% if r.exam_info %}<p class="mb-1 text-muted">考试：{{ r.exam_info }}</p>{% endif %}
+      {% if r.study_tips %}<p class="mb-1 text-muted">建议：{{ r.study_tips }}</p>{% endif %}
+      {% if current_user.is_authenticated and r.user_id == current_user.id %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('courses.edit_review', review_id=r.id) }}">编辑</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% if pagination.pages > 1 %}
+  <nav class="mt-3">
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('courses.detail', course_id=course.id, page=pagination.prev_num) }}">上一页</a></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">第 {{ pagination.page }} / {{ pagination.pages }} 页</span></li>
+      {% if pagination.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('courses.detail', course_id=course.id, page=pagination.next_num) }}">下一页</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -70,7 +70,9 @@ def register():
                 flash("邮箱已被注册", "error")
                 return redirect(url_for("auth.register"))
         
-        user = SimpleUser.create(username=username, email=email, password=password)
+        # 创建新用户
+        user = SimpleUser.create(username, email, password)
+        
         if request.is_json:
             return jsonify({"message": "注册成功", "user_id": user.id}), 201
         else:
@@ -152,6 +154,7 @@ def login():
         user = SimpleUser.get_by_username(username)
         if user and user.check_password(password):
             login_user(user)
+            
             if request.is_json:
                 return jsonify({"message": "登录成功", "user_id": user.id})
             else:

@@ -55,3 +55,5 @@ kunqing-campus/
 - 图书：`/books/`
 - 课程：`/courses/`
 - 学习小组：`/study-groups/`
+- 示例用户：用户名 2021001 ，密码 password123
+- 示例用户：用户名 2021002 ，密码 password123

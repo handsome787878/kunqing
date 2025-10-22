@@ -7,11 +7,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # 初始化简化的数据模型
-    from .simple_models import init_sample_data
-    init_sample_data()
-
-    # 初始化 Flask-Login
+    # 暂时回到简化模型，但使用SQLite确保数据持久化
+    from .simple_models import init_sample_data, SimpleUser
+    
+    # 初始化Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
@@ -20,8 +19,10 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        from .simple_models import SimpleUser
-        return SimpleUser.get_by_id(user_id)
+        return SimpleUser.get_by_id(int(user_id))
+
+    # 初始化示例数据
+    init_sample_data()
 
     # 注册蓝图
     from .routes.auth import auth_bp

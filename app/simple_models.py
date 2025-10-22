@@ -1,5 +1,37 @@
 # 简化版数据模型，用于演示
 from datetime import datetime
+import sqlite3
+import os
+from datetime import datetime
+
+# SQLite数据库文件路径
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'kunqing.sqlite')
+
+def init_db():
+    """初始化SQLite数据库"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # 创建用户表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            real_name TEXT,
+            college TEXT,
+            major TEXT,
+            grade TEXT,
+            phone TEXT,
+            avatar TEXT,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
 
 
 class SimpleDB:
@@ -26,22 +58,22 @@ simple_db = SimpleDB()
 class SimpleUser:
     """简化的用户模型"""
     
-    def __init__(self, student_id, email, password, real_name=None):
-        self.id = simple_db.get_next_id()
+    def __init__(self, id, student_id, email, password_hash, real_name=None, college=None, major=None, grade=None, phone=None, avatar=None, create_time=None, last_login=None):
+        self.id = id
         self.student_id = student_id
         self.email = email
-        self.password = password  # 实际应用中应该加密
+        self.password_hash = password_hash
         self.real_name = real_name
-        self.college = ""
-        self.major = ""
-        self.grade = ""
-        self.phone = ""
-        self.avatar = ""
-        self.create_time = datetime.now()
-        self.last_login = None
+        self.college = college
+        self.major = major
+        self.grade = grade
+        self.phone = phone
+        self.avatar = avatar
+        self.create_time = create_time
+        self.last_login = last_login
         
-        # 添加到数据库
-        simple_db.users.append(self)
+        # 添加到数据库（已在create方法中处理）
+        pass
     
     @property
     def is_authenticated(self):
@@ -59,21 +91,100 @@ class SimpleUser:
         return str(self.id)
     
     def check_password(self, password):
-        return self.password == password
+        """验证密码"""
+        import bcrypt
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
     @staticmethod
+    def create(student_id, email, password):
+        """创建新用户并保存到SQLite数据库"""
+        import bcrypt
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO users (student_id, email, password_hash, create_time)
+                VALUES (?, ?, ?, ?)
+            ''', (student_id, email, password_hash, datetime.now()))
+            
+            user_id = cursor.lastrowid
+            conn.commit()
+            
+            # 返回新创建的用户对象
+            user = SimpleUser(user_id, student_id, email, password_hash, create_time=datetime.now())
+            return user
+            
+        except sqlite3.IntegrityError:
+            conn.rollback()
+            return None
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_username(student_id):
+        """根据学号获取用户"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM users WHERE student_id = ?', (student_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return SimpleUser(*row)
+        return None
+
+    @staticmethod
+    def get_by_email(email):
+        """根据邮箱获取用户"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return SimpleUser(*row)
+        return None
+
+    @staticmethod
     def get_by_id(user_id):
-        for user in simple_db.users:
-            if user.id == int(user_id):
-                return user
+        """根据ID获取用户"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return SimpleUser(*row)
         return None
     
     @staticmethod
     def get_by_email(email):
+        """根据邮箱获取用户"""
         for user in simple_db.users:
             if user.email == email:
                 return user
         return None
+    
+    @staticmethod
+    def get_by_username(username):
+        """根据用户名获取用户（这里使用学号作为用户名）"""
+        for user in simple_db.users:
+            if user.student_id == username:
+                return user
+        return None
+    
+    @staticmethod
+    def create(username, email, password, real_name=None):
+        """创建新用户"""
+        return SimpleUser(username, email, password, real_name)
 
 
 class SimpleLostFound:
@@ -192,23 +303,17 @@ class SimpleStudyGroup:
 # 初始化一些示例数据
 def init_sample_data():
     """初始化示例数据"""
-    if not simple_db.users:  # 只在第一次运行时初始化
+    init_db()  # 确保数据库表已创建
+    
+    # 检查是否已有用户数据
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM users')
+    count = cursor.fetchone()[0]
+    conn.close()
+    
+    if count == 0:
         # 创建示例用户
-        user1 = SimpleUser("2021001", "student1@example.com", "password123", "张三")
-        user2 = SimpleUser("2021002", "student2@example.com", "password123", "李四")
-        
-        # 创建示例失物招领
-        SimpleLostFound(user1.id, "lost", "丢失校园卡", "在图书馆丢失校园卡，卡号2021001", "图书馆", "13800138001")
-        SimpleLostFound(user2.id, "found", "捡到钥匙", "在食堂捡到一串钥匙", "食堂", "13800138002")
-        
-        # 创建示例二手书
-        SimpleBook(user1.id, "高等数学", "同济大学", 30, "八成新", "课本无笔记，保存完好")
-        SimpleBook(user2.id, "大学英语", "外研社", 25, "九成新", "几乎全新")
-        
-        # 创建示例课程
-        SimpleCourse("CS101", "计算机科学导论", "王教授", "计算机学院")
-        SimpleCourse("MATH101", "高等数学", "李教授", "数学学院")
-        
-        # 创建示例学习小组
-        SimpleStudyGroup(user1.id, "高数学习小组", "高等数学", "期末考试复习", 6)
-        SimpleStudyGroup(user2.id, "英语口语练习", "英语", "提高口语水平", 4)
+        SimpleUser.create("2021001", "student1@example.com", "password123")
+        SimpleUser.create("2021002", "student2@example.com", "password123")
+        print("已创建示例用户数据")

@@ -1,5 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask import current_app
 import bcrypt
+from datetime import datetime
 
 
 db = SQLAlchemy()

@@ -49,7 +49,7 @@ kunqing-campus/
    ```
 
 访问 `http://127.0.0.1:5000/`，各模块示例首页：
-
+![输入图片说明](app/%E9%B2%B2%E6%93%8E%E7%A4%BA%E4%BE%8B.PNG)
 - 认证：`/auth/`
 - 失物招领：`/lost-found/`
 - 图书：`/books/`

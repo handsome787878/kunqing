@@ -1,6 +1,6 @@
 # Kunqing Campus
 
-一个基于 Flask 的校园应用项目结构脚手架。
+一个基于 Flask 的校园应用项目结构。
 
 ## 结构
 

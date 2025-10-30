@@ -149,7 +149,15 @@ class SimpleUser:
     
     def is_super_admin(self):
         """检查用户是否是超级管理员"""
-        return self.admin_level >= 2
+        # 检查admin_level
+        if hasattr(self, 'admin_level') and self.admin_level >= 2:
+            return True
+        
+        # 特殊账号处理：admin账号直接给予超级管理员权限
+        if self.student_id == 'admin':
+            return True
+            
+        return False
     
     @staticmethod
     def create(student_id, email, password):

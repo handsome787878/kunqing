@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.utils.admin_decorators import admin_required, super_admin_required, user_management_required, content_management_required
-from app.simple_models import SimpleUser
+from app.simple_models import SimpleUser, SimpleLostFound, SimpleBook
 from datetime import datetime
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -99,6 +99,7 @@ def users():
             'create_time': datetime.now(),
             'last_login': datetime.now(),
             'is_admin': True,
+            'admin_level': 1,
             'status': 'active'
         },
         {
@@ -113,6 +114,7 @@ def users():
             'create_time': datetime.now(),
             'last_login': datetime.now(),
             'is_admin': False,
+            'admin_level': 0,
             'status': 'active'
         },
         {
@@ -127,6 +129,7 @@ def users():
             'create_time': datetime.now(),
             'last_login': datetime.now(),
             'is_admin': False,
+            'admin_level': 0,
             'status': 'active'
         },
         {
@@ -141,6 +144,7 @@ def users():
             'create_time': datetime.now(),
             'last_login': datetime.now(),
             'is_admin': False,
+            'admin_level': 0,
             'status': 'inactive'
         },
         {
@@ -155,6 +159,7 @@ def users():
             'create_time': datetime.now(),
             'last_login': datetime.now(),
             'is_admin': True,
+            'admin_level': 2,
             'status': 'active'
         }
     ]
@@ -267,11 +272,15 @@ def delete_user(user_id):
 @content_management_required
 def content():
     """内容管理页面"""
-    # 获取待审核的内容
-    pending_lost_found = LostFound.query.filter(LostFound.status == 'pending').count()
-    pending_books = SecondhandBook.query.filter(SecondhandBook.status == 'pending').count()
+    # 获取待审核的内容 - 使用简化版本
+    all_lost_found = SimpleLostFound.get_all()
+    all_books = SimpleBook.get_all()
     
-    return render_template("admin/content.html", 
+    # 计算待处理的数量（简化版本中没有pending状态，使用open/available状态）
+    pending_lost_found = len([item for item in all_lost_found if item.status == 'open'])
+    pending_books = len([book for book in all_books if book.status == 'available'])
+    
+    return render_template("admin/content_management.html", 
                          pending_lost_found=pending_lost_found,
                          pending_books=pending_books)
 
@@ -283,13 +292,31 @@ def lost_found_management():
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', '')
     
-    query = LostFound.query
+    # 使用简化版本获取数据
+    all_items = SimpleLostFound.get_all()
     if status_filter:
-        query = query.filter(LostFound.status == status_filter)
+        all_items = [item for item in all_items if item.status == status_filter]
     
-    lost_found_items = query.order_by(desc(LostFound.create_time)).paginate(
-        page=page, per_page=20, error_out=False
-    )
+    # 简单分页处理
+    per_page = 20
+    start = (page - 1) * per_page
+    end = start + per_page
+    items = all_items[start:end]
+    
+    # 创建简单的分页对象
+    class SimplePagination:
+        def __init__(self, items, page, per_page, total):
+            self.items = items
+            self.page = page
+            self.per_page = per_page
+            self.total = total
+            self.pages = (total + per_page - 1) // per_page
+            self.has_prev = page > 1
+            self.has_next = page < self.pages
+            self.prev_num = page - 1 if self.has_prev else None
+            self.next_num = page + 1 if self.has_next else None
+    
+    lost_found_items = SimplePagination(items, page, per_page, len(all_items))
     
     return render_template("admin/lost_found_management.html", 
                          items=lost_found_items, 
@@ -303,13 +330,31 @@ def books_management():
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', '')
     
-    query = SecondhandBook.query
+    # 使用简化版本获取数据
+    all_books = SimpleBook.get_all()
     if status_filter:
-        query = query.filter(SecondhandBook.status == status_filter)
+        all_books = [book for book in all_books if book.status == status_filter]
     
-    books = query.order_by(desc(SecondhandBook.create_time)).paginate(
-        page=page, per_page=20, error_out=False
-    )
+    # 简单分页处理
+    per_page = 20
+    start = (page - 1) * per_page
+    end = start + per_page
+    book_items = all_books[start:end]
+    
+    # 创建简单的分页对象
+    class SimplePagination:
+        def __init__(self, items, page, per_page, total):
+            self.items = items
+            self.page = page
+            self.per_page = per_page
+            self.total = total
+            self.pages = (total + per_page - 1) // per_page
+            self.has_prev = page > 1
+            self.has_next = page < self.pages
+            self.prev_num = page - 1 if self.has_prev else None
+            self.next_num = page + 1 if self.has_next else None
+    
+    books = SimplePagination(book_items, page, per_page, len(all_books))
     
     return render_template("admin/books_management.html", 
                          books=books, 

@@ -22,7 +22,7 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/你的用户名/kunqing-campus.git
+   git clone https://gitee.com/ospuer/kunqing.git
    cd kunqing-campus
    ```
 
@@ -50,9 +50,9 @@
 5. **访问应用**
    - 打开浏览器访问: http://127.0.0.1:5000
    - 使用测试账户登录：
-     - 用户名: `admin` 密码: `password123`
-     - 用户名: `2021001` 密码: `password123`
-     - 用户名: `2021002` 密码: `password123`
+     - **管理员账户**: 用户名: `admin` 密码: `admin123` (管理员级别: 2)
+     - **普通用户**: 用户名: `2021001` 密码: `password123`
+     - **普通用户**: 用户名: `2021002` 密码: `password123`
 
 ## 📁 项目结构
 
@@ -145,11 +145,11 @@ chmod +x git-push.sh
 ### 🔧 Git配置
 ```bash
 # 设置用户信息
-git config --global user.name "你的用户名"
-git config --global user.email "your.email@example.com"
+git config --global user.name "龚精奎"
+git config --global user.email "2713878912@qq.com"
 
 # 添加远程仓库
-git remote add origin https://github.com/你的用户名/kunqing-campus.git
+git remote add origin https://gitee.com/ospuer/kunqing.git
 ```
 
 ## 🌟 主要功能模块
@@ -231,8 +231,8 @@ git remote add origin https://github.com/你的用户名/kunqing-campus.git
 
 ## 📞 联系方式
 
-- 项目链接: [https://github.com/你的用户名/kunqing-campus](https://github.com/你的用户名/kunqing-campus)
-- 问题反馈: [Issues](https://github.com/你的用户名/kunqing-campus/issues)
+- 项目链接: [https://gitee.com/ospuer/kunqing](https://gitee.com/ospuer/kunqing)
+- 问题反馈: 2713878912@qq.com
 
 ## 🙏 致谢
 

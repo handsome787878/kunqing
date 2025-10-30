@@ -26,7 +26,8 @@ def init_db():
             phone TEXT,
             avatar TEXT,
             create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_login TIMESTAMP
+            last_login TIMESTAMP,
+            admin_level INTEGER DEFAULT 0
         )
     ''')
     
@@ -49,6 +50,38 @@ class SimpleDB:
         current_id = self._id_counter
         self._id_counter += 1
         return current_id
+    
+    def get_all_users(self):
+        """获取所有用户"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM users')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        users = []
+        for row in rows:
+            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login, admin_level
+            user_dict = {
+                'id': row[0],
+                'student_id': row[1],
+                'email': row[2],
+                'password_hash': row[3],
+                'real_name': row[4],
+                'college': row[5],
+                'major': row[6],
+                'grade': row[7],
+                'phone': row[8],
+                'avatar': row[9],
+                'create_time': row[10],
+                'last_login': row[11],
+                'admin_level': row[12] if len(row) > 12 else 0,
+                'is_active': True  # 默认为活跃用户
+            }
+            users.append(user_dict)
+        
+        return users
 
 
 # 全局数据库实例
@@ -58,7 +91,7 @@ simple_db = SimpleDB()
 class SimpleUser:
     """简化的用户模型"""
     
-    def __init__(self, id, student_id, email, password_hash, real_name=None, college=None, major=None, grade=None, phone=None, avatar=None, create_time=None, last_login=None):
+    def __init__(self, id, student_id, email, password_hash, real_name=None, college=None, major=None, grade=None, phone=None, avatar=None, create_time=None, last_login=None, admin_level=0):
         self.id = id
         self.student_id = student_id
         self.email = email
@@ -71,6 +104,7 @@ class SimpleUser:
         self.avatar = avatar
         self.create_time = create_time
         self.last_login = last_login
+        self.admin_level = admin_level
         
         # 添加到数据库（已在create方法中处理）
         pass
@@ -92,14 +126,30 @@ class SimpleUser:
     
     def check_password(self, password):
         """验证密码"""
-        import bcrypt
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        # 简单的SHA256哈希验证（用于演示）
+        import hashlib
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        return password_hash == self.password_hash
     
     def is_admin_user(self):
         """检查是否为管理员用户"""
         # 简化版：学号以admin开头或特定学号为管理员
-        admin_accounts = ['admin', '2021001']  # 可以根据需要添加更多管理员账号
+        admin_accounts = ['admin', 'admin001', '2021001']  # 可以根据需要添加更多管理员账号
         return self.student_id in admin_accounts or self.student_id.startswith('admin')
+    
+    def can_manage_content(self):
+        """检查是否可以管理内容"""
+        # 管理员用户可以管理内容
+        return self.is_admin_user()
+    
+    def can_manage_users(self):
+        """检查是否可以管理用户"""
+        # 管理员用户可以管理用户
+        return self.is_admin_user()
+    
+    def is_super_admin(self):
+        """检查用户是否是超级管理员"""
+        return self.admin_level >= 2
     
     @staticmethod
     def create(student_id, email, password):
@@ -112,15 +162,15 @@ class SimpleUser:
         
         try:
             cursor.execute('''
-                INSERT INTO users (student_id, email, password_hash, create_time)
-                VALUES (?, ?, ?, ?)
-            ''', (student_id, email, password_hash, datetime.now()))
+                INSERT INTO users (student_id, email, password_hash, create_time, admin_level)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (student_id, email, password_hash, datetime.now(), 0))
             
             user_id = cursor.lastrowid
             conn.commit()
             
             # 返回新创建的用户对象
-            user = SimpleUser(user_id, student_id, email, password_hash, create_time=datetime.now())
+            user = SimpleUser(user_id, student_id, email, password_hash, create_time=datetime.now(), admin_level=0)
             return user
             
         except sqlite3.IntegrityError:
@@ -140,7 +190,7 @@ class SimpleUser:
         conn.close()
         
         if row:
-            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login
+            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login, admin_level
             return SimpleUser(
                 id=row[0],
                 student_id=row[1], 
@@ -153,7 +203,8 @@ class SimpleUser:
                 phone=row[8],
                 avatar=row[9],
                 create_time=row[10],
-                last_login=row[11]
+                last_login=row[11],
+                admin_level=row[12] if len(row) > 12 else 0
             )
         return None
 

@@ -419,19 +419,19 @@
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-item">
-                    <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-link active">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link active">
                         <span class="nav-icon">📊</span>
                         数据统计
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="{{ url_for('admin.user_management') }}" class="nav-link">
+                    <a href="{{ url_for('admin.users') }}" class="nav-link">
                         <span class="nav-icon">👥</span>
                         用户管理
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="{{ url_for('admin.content_management') }}" class="nav-link">
+                    <a href="{{ url_for('admin.content') }}" class="nav-link">
                         <span class="nav-icon">📝</span>
                         内容管理
                     </a>
@@ -526,7 +526,7 @@
                 <div class="quick-actions">
                     <h2 class="section-title animate-fade-in-left">🚀 快速操作</h2>
                     <div class="actions-grid">
-                        <a href="{{ url_for('admin.user_management') }}" class="action-btn btn-enhanced hover-lift animate-scale-in animate-delay-100">
+                        <a href="{{ url_for('admin.users') }}" class="action-btn btn-enhanced hover-lift animate-scale-in animate-delay-100">
                             <div class="action-icon">👥</div>
                             <div class="action-content">
                                 <h3>用户管理</h3>
@@ -534,7 +534,7 @@
                             </div>
                         </a>
                         
-                        <a href="{{ url_for('admin.content_management') }}" class="action-btn btn-enhanced hover-lift animate-scale-in animate-delay-200">
+                        <a href="{{ url_for('admin.content') }}" class="action-btn btn-enhanced hover-lift animate-scale-in animate-delay-200">
                             <div class="action-icon">📝</div>
                             <div class="action-content">
                                 <h3>内容审核</h3>

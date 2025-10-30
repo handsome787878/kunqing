@@ -231,8 +231,8 @@ git remote add origin https://github.com/你的用户名/kunqing-campus.git
 
 ## 📞 联系方式
 
-- 项目链接: [https://github.com/你的用户名/kunqing-campus](https://github.com/你的用户名/kunqing-campus)
-- 问题反馈: [Issues](https://github.com/你的用户名/kunqing-campus/issues)
+- 项目链接: https://gitee.com/ospuer/kunqing 
+- 问题反馈:2713878912@qq.com
 
 ## 🙏 致谢
 

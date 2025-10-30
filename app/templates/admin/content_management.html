@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容管理 - 鲲擎校园管理后台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-enhanced.css') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+            font-family: var(--font-primary);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 背景装饰 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 侧边栏样式 */
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, 
+                rgba(44, 62, 80, 0.95) 0%, 
+                rgba(52, 73, 94, 0.95) 50%, 
+                rgba(44, 62, 80, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-white);
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: var(--shadow-2xl);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-header {
+            padding: var(--space-8) var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: var(--font-xl);
+            font-weight: var(--font-bold);
+            background: linear-gradient(135deg, #fff 0%, #e8f4fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: var(--letter-wide);
+        }
+
+        .sidebar-header p {
+            margin: var(--space-2) 0 0 0;
+            font-size: var(--font-sm);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: var(--font-medium);
+        }
+
+        .sidebar-nav {
+            padding: var(--space-6) 0;
+        }
+
+        .nav-item {
+            margin-bottom: var(--space-2);
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: var(--space-4) var(--space-6);
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: var(--font-base);
+            font-weight: var(--font-medium);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+            margin-right: var(--space-4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-white);
+            transform: translateX(8px);
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.4) 0%, rgba(41, 128, 185, 0.4) 100%);
+            color: var(--text-white);
+            box-shadow: inset 0 0 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .nav-link.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-icon {
+            margin-right: var(--space-3);
+            font-size: var(--font-lg);
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 主内容区域 */
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 顶部栏 */
+        .admin-topbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: var(--space-4) var(--space-8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .topbar-left h1 {
+            margin: 0;
+            font-size: var(--font-2xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-4);
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: var(--radius-lg);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info:hover {
+            background: rgba(102, 126, 234, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-white);
+            font-weight: var(--font-bold);
+            font-size: var(--font-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: var(--font-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+        }
+
+        .user-details p {
+            margin: 0;
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            padding: var(--space-2) var(--space-4);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: var(--text-white);
+            text-decoration: none;
+            border-radius: var(--radius-lg);
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, #c0392b, #a93226);
+        }
+
+        /* 内容区域 */
+        .admin-content {
+            flex: 1;
+            padding: var(--space-8);
+            overflow-y: auto;
+        }
+
+        /* 筛选器 */
+        .filter-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: var(--space-6);
+            border-radius: var(--radius-2xl);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: var(--space-8);
+            display: flex;
+            gap: var(--space-4);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .filter-label {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+        }
+
+        .filter-select {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        }
+
+        /* 内容卡片网格 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-8);
+            margin-bottom: var(--space-8);
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: var(--space-6);
+            border-radius: var(--radius-2xl);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-6);
+            padding-bottom: var(--space-4);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .card-title {
+            font-size: var(--font-xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-count {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            color: var(--color-primary);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-full);
+            font-weight: var(--font-bold);
+            font-size: var(--font-sm);
+        }
+
+        /* 内容项目 */
+        .content-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .content-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateX(8px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .item-title {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            font-size: var(--font-base);
+            margin: 0;
+        }
+
+        .item-status {
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-xs);
+            font-weight: var(--font-semibold);
+            text-transform: uppercase;
+            letter-spacing: var(--letter-wide);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+        }
+
+        .item-meta {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            margin-bottom: var(--space-3);
+        }
+
+        .item-description {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: var(--space-4);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: var(--text-white);
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: var(--text-white);
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: var(--text-white);
+        }
+
+        .btn-action {
+            padding: var(--space-2) var(--space-3);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: var(--font-xs);
+            font-weight: var(--font-medium);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-12);
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-4);
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: var(--font-lg);
+            font-weight: var(--font-medium);
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: var(--font-xl);
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: var(--space-2);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .admin-main {
+                margin-left: 0;
+            }
+            
+            .admin-topbar {
+                padding: var(--space-4);
+            }
+            
+            .admin-content {
+                padding: var(--space-4);
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+            
+            .item-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 侧边栏 -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <h2>🛡️ 管理后台</h2>
+                <p>鲲擎校园管理系统</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        数据统计
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.user_management') }}" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        用户管理
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.content_management') }}" class="nav-link active">
+                        <span class="nav-icon">📝</span>
+                        内容管理
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.statistics') }}" class="nav-link">
+                        <span class="nav-icon">📈</span>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="admin-main">
+            <!-- 顶部栏 -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    <h1>📝 内容管理</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <div class="user-details">
+                            <h3>管理员</h3>
+                            <p>超级管理员</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">
+                        🚪 退出登录
+                    </a>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="admin-content">
+                <!-- 筛选器 -->
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label class="filter-label">内容类型:</label>
+                        <select class="filter-select" id="contentType">
+                            <option value="all">全部</option>
+                            <option value="lost_found">失物招领</option>
+                            <option value="secondhand">二手书籍</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">审核状态:</label>
+                        <select class="filter-select" id="reviewStatus">
+                            <option value="all">全部</option>
+                            <option value="pending">待审核</option>
+                            <option value="approved">已通过</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">时间范围:</label>
+                        <select class="filter-select" id="timeRange">
+                            <option value="all">全部时间</option>
+                            <option value="today">今天</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 内容网格 -->
+                <div class="content-grid">
+                    <!-- 失物招领卡片 -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">🔍 失物招领</h3>
+                            <span class="card-count">{{ lost_found_items|length if lost_found_items else 0 }} 条</span>
+                        </div>
+                        
+                        {% if lost_found_items %}
+                            {% for item in lost_found_items %}
+                            <div class="content-item">
+                                <div class="item-header">
+                                    <h4 class="item-title">{{ item.title }}</h4>
+                                    <span class="item-status status-{{ item.status }}">
+                                        {% if item.status == 'pending' %}⏳ 待审核
+                                        {% elif item.status == 'approved' %}✅ 已通过
+                                        {% else %}❌ 已拒绝{% endif %}
+                                    </span>
+                                </div>
+                                <div class="item-meta">
+                                    📅 {{ item.created_at.strftime('%Y-%m-%d %H:%M') }} | 👤 {{ item.user_name }}
+                                </div>
+                                <div class="item-description">
+                                    {{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-action btn-view" onclick="viewItem('lost_found', {{ item.id }})">
+                                        👁️ 查看
+                                    </button>
+                                    {% if item.status == 'pending' %}
+                                    <button class="btn-action btn-approve" onclick="approveItem('lost_found', {{ item.id }})">
+                                        ✅ 通过
+                                    </button>
+                                    <button class="btn-action btn-reject" onclick="rejectItem('lost_found', {{ item.id }})">
+                                        ❌ 拒绝
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🔍</div>
+                                <div class="empty-state-text">暂无失物招领信息</div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 二手书籍卡片 -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">📚 二手书籍</h3>
+                            <span class="card-count">{{ secondhand_books|length if secondhand_books else 0 }} 条</span>
+                        </div>
+                        
+                        {% if secondhand_books %}
+                            {% for book in secondhand_books %}
+                            <div class="content-item">
+                                <div class="item-header">
+                                    <h4 class="item-title">{{ book.title }}</h4>
+                                    <span class="item-status status-{{ book.status }}">
+                                        {% if book.status == 'pending' %}⏳ 待审核
+                                        {% elif book.status == 'approved' %}✅ 已通过
+                                        {% else %}❌ 已拒绝{% endif %}
+                                    </span>
+                                </div>
+                                <div class="item-meta">
+                                    📅 {{ book.created_at.strftime('%Y-%m-%d %H:%M') }} | 👤 {{ book.user_name }} | 💰 ¥{{ book.price }}
+                                </div>
+                                <div class="item-description">
+                                    {{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-action btn-view" onclick="viewItem('secondhand', {{ book.id }})">
+                                        👁️ 查看
+                                    </button>
+                                    {% if book.status == 'pending' %}
+                                    <button class="btn-action btn-approve" onclick="approveItem('secondhand', {{ book.id }})">
+                                        ✅ 通过
+                                    </button>
+                                    <button class="btn-action btn-reject" onclick="rejectItem('secondhand', {{ book.id }})">
+                                        ❌ 拒绝
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📚</div>
+                                <div class="empty-state-text">暂无二手书籍信息</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 移动端侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.admin-sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            if (!overlay) {
+                // 创建遮罩层
+                const newOverlay = document.createElement('div');
+                newOverlay.className = 'sidebar-overlay';
+                newOverlay.onclick = closeSidebar;
+                document.body.appendChild(newOverlay);
+            }
+            
+            sidebar.classList.toggle('mobile-open');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+        
+        function closeSidebar() {
+            const sidebar = document.querySelector('.admin-sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            sidebar.classList.remove('mobile-open');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+        }
+
+        // 点击主内容区域关闭侧边栏（移动端）
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('adminSidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !menuBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // 查看内容详情
+        function viewItem(type, id) {
+            console.log(`查看${type}内容:`, id);
+            // 这里可以添加查看详情的逻辑
+        }
+
+        // 通过审核
+        function approveItem(type, id) {
+            if (confirm('确定要通过这个内容的审核吗？')) {
+                fetch(`/admin/content/${type}/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('操作失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请稍后重试');
+                });
+            }
+        }
+
+        // 拒绝审核
+        function rejectItem(type, id) {
+            const reason = prompt('请输入拒绝理由：');
+            if (reason) {
+                fetch(`/admin/content/${type}/${id}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('操作失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请稍后重试');
+                });
+            }
+        }
+
+        // 筛选功能
+        document.getElementById('contentType').addEventListener('change', filterContent);
+        document.getElementById('reviewStatus').addEventListener('change', filterContent);
+        document.getElementById('timeRange').addEventListener('change', filterContent);
+
+        function filterContent() {
+            const contentType = document.getElementById('contentType').value;
+            const reviewStatus = document.getElementById('reviewStatus').value;
+            const timeRange = document.getElementById('timeRange').value;
+            
+            console.log('筛选条件:', { contentType, reviewStatus, timeRange });
+            // 这里可以添加实际的筛选逻辑
+        }
+
+        // 内容卡片悬停效果
+        const contentCards = document.querySelectorAll('.content-card');
+        contentCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-12px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-8px)';
+            });
+        });
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentItems = document.querySelectorAll('.content-item');
+            contentItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('animate-fade-in-up');
+                }, index * 100);
+            });
+            
+            // 响应式检测
+            function checkScreenSize() {
+                const isMobile = window.innerWidth <= 768;
+                const sidebar = document.querySelector('.admin-sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                
+                if (!isMobile) {
+                    sidebar.classList.remove('mobile-open');
+                    if (overlay) {
+                        overlay.classList.remove('active');
+                    }
+                }
+            }
+            
+            window.addEventListener('resize', checkScreenSize);
+            checkScreenSize();
+        });
+    </script>
+</body>
+</html>

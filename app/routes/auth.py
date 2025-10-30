@@ -247,16 +247,5 @@ def send_reset_captcha():
 
 @auth_bp.route("/password-reset", methods=["GET", "POST"])
 def password_reset():
-    form = PasswordResetForm()
-    if request.method == "POST" and form.validate_on_submit():
-        email = form.email.data
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({"error": "用户不存在"}), 404
-        if not verify_captcha(email, form.captcha.data):
-            return jsonify({"error": "验证码错误或过期"}), 400
-        user.set_password(form.new_password.data)
-        db.session.commit()
-        return jsonify({"message": "密码已重置"})
-
-    return jsonify({"fields": ["email", "captcha", "new_password", "confirm_password"]})
+    # 简化版密码重置功能暂不实现
+    return jsonify({"message": "密码重置功能暂未实现"}), 501

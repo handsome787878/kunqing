@@ -20,6 +20,8 @@ class User(db.Model):
     grade = db.Column(db.String(20))
     phone = db.Column(db.String(20))
     avatar = db.Column(db.String(255))
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)  # 管理员标识
+    admin_level = db.Column(db.Integer, default=0)  # 管理员级别：0-普通用户，1-普通管理员，2-超级管理员
     create_time = db.Column(db.DateTime, default=db.func.now(), nullable=False)
     last_login = db.Column(db.DateTime)
 
@@ -92,6 +94,23 @@ class User(db.Model):
 
     def get_id(self) -> str:
         return str(self.id)
+    
+    # 管理员权限检查方法
+    def is_admin_user(self) -> bool:
+        """检查是否为管理员"""
+        return self.is_admin and self.admin_level > 0
+    
+    def is_super_admin(self) -> bool:
+        """检查是否为超级管理员"""
+        return self.is_admin and self.admin_level >= 2
+    
+    def can_manage_users(self) -> bool:
+        """检查是否可以管理用户"""
+        return self.admin_level >= 1
+    
+    def can_manage_content(self) -> bool:
+        """检查是否可以管理内容"""
+        return self.admin_level >= 1
 
 
 class LostFound(db.Model):

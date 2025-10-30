@@ -30,12 +30,14 @@ def create_app():
     from .routes.simple_books import books_bp
     from .routes.simple_courses import courses_bp
     from .routes.simple_study_groups import study_groups_bp
+    from .routes.admin import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(lost_found_bp, url_prefix="/lost_found")
     app.register_blueprint(books_bp, url_prefix="/books")
     app.register_blueprint(courses_bp, url_prefix="/courses")
     app.register_blueprint(study_groups_bp, url_prefix="/study_groups")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # 主页路由
     @app.route("/")

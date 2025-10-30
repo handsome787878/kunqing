@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 鲲擎校园</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-enhanced.css') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 动态背景动画 */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 背景装饰元素 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-50px, -50px) rotate(360deg); }
+        }
+
+        .admin-login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: var(--space-12);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 容器装饰效果 */
+        .admin-login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .admin-login-header {
+            margin-bottom: var(--space-8);
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-login-header h1 {
+            font-size: var(--font-3xl);
+            font-weight: var(--font-bold);
+            margin-bottom: var(--space-3);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: var(--letter-tight);
+        }
+
+        .admin-login-header p {
+            color: var(--text-muted);
+            font-size: var(--font-base);
+            font-weight: var(--font-medium);
+            letter-spacing: var(--letter-wide);
+        }
+
+        .admin-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-6);
+            display: block;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .form-group {
+            margin-bottom: var(--space-6);
+            text-align: left;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+            font-weight: var(--font-semibold);
+            font-size: var(--font-sm);
+            letter-spacing: var(--letter-wide);
+            text-transform: uppercase;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: var(--space-4) var(--space-5);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            font-size: var(--font-base);
+            font-weight: var(--font-medium);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .btn-admin-login {
+            width: 100%;
+            padding: var(--space-4) var(--space-6);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: var(--text-white);
+            border: none;
+            border-radius: var(--radius-xl);
+            font-size: var(--font-base);
+            font-weight: var(--font-semibold);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: var(--space-4);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: var(--letter-wide);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-admin-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-admin-login:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn-admin-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-admin-login:active {
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            margin-top: var(--space-6);
+            display: inline-flex;
+            align-items: center;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
+            transition: all 0.3s ease;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-lg);
+            background: rgba(102, 126, 234, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-link:hover {
+            color: var(--color-secondary);
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(-4px);
+        }
+
+        .alert {
+            padding: var(--space-4) var(--space-5);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+            font-size: var(--font-sm);
+            font-weight: var(--font-medium);
+            border: 1px solid;
+            position: relative;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            color: #c33;
+            border-color: #fcc;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #efe 0%, #dfd 100%);
+            color: #363;
+            border-color: #cfc;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #eef 0%, #ddf 100%);
+            color: #336;
+            border-color: #ccf;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .admin-login-container {
+                padding: var(--space-8) var(--space-6);
+                margin: var(--space-6);
+                border-radius: var(--radius-xl);
+            }
+            
+            .admin-login-header h1 {
+                font-size: var(--font-2xl);
+            }
+            
+            .admin-icon {
+                font-size: 3rem;
+            }
+        }
+
+        /* 加载状态样式 */
+        .btn-admin-login.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-admin-login.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="admin-login-header">
+            <span class="admin-icon">🛡️</span>
+            <h1>管理员登录</h1>
+            <p>鲲擎校园管理后台</p>
+        </div>
+
+        <!-- 闪现消息 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('admin.admin_login') }}" id="loginForm">
+            <div class="form-group">
+                <label for="account" class="form-label">账号</label>
+                <input type="text" 
+                       id="account" 
+                       name="account" 
+                       class="form-control" 
+                       placeholder="请输入学号或邮箱"
+                       required
+                       autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       class="form-control" 
+                       placeholder="请输入密码"
+                       required
+                       autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-admin-login" id="loginBtn">
+                🔐 登录管理后台
+            </button>
+        </form>
+
+        <a href="{{ url_for('index') }}" class="back-link">
+            ← 返回首页
+        </a>
+    </div>
+
+    <script>
+        // 自动聚焦到账号输入框
+        document.getElementById('account').focus();
+        
+        // 表单提交时的加载状态
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('loginBtn');
+            btn.innerHTML = '🔄 登录中...';
+            btn.classList.add('loading');
+            btn.disabled = true;
+        });
+
+        // 输入框焦点效果
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+    </script>
+</body>
+</html>

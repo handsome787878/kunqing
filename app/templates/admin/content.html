@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容管理 - 鲲擎校园管理后台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: #3498db;
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 16px;
+            width: 20px;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            background-color: #f5f7fa;
+        }
+
+        .topbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-left h1 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .content-area {
+            padding: 30px;
+        }
+
+        /* 内容类型选项卡 */
+        .content-tabs {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: #3498db;
+            background-color: #f8f9fa;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 内容列表 */
+        .content-list {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .content-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .content-item:last-child {
+            border-bottom: none;
+        }
+
+        .content-info {
+            flex: 1;
+        }
+
+        .content-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .content-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .content-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .content-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .content-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+
+            .tab-buttons {
+                flex-direction: column;
+            }
+
+            .content-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .content-actions {
+                flex-direction: row;
+                min-width: auto;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 侧边栏 -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>🛡️ 管理后台</h2>
+                <p>鲲擎校园</p>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.dashboard') }}" class="nav-link">
+                        <i>📊</i> 仪表盘
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.users') }}" class="nav-link">
+                        <i>👥</i> 用户管理
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.content') }}" class="nav-link active">
+                        <i>📝</i> 内容管理
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.statistics') }}" class="nav-link">
+                        <i>📈</i> 数据统计
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ url_for('admin.settings') }}" class="nav-link">
+                        <i>⚙️</i> 系统设置
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 顶部导航栏 -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1>内容管理</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {{ current_user.student_id[0] if current_user.student_id else 'A' }}
+                        </div>
+                        <span>{{ current_user.student_id or '管理员' }}</span>
+                    </div>
+                    <a href="{{ url_for('admin.admin_logout') }}" class="logout-btn">退出登录</a>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 内容类型选项卡 -->
+                <div class="content-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" onclick="switchTab('lost-found')">
+                            🔍 失物招领
+                        </button>
+                        <button class="tab-button" onclick="switchTab('books')">
+                            📚 二手书籍
+                        </button>
+                        <button class="tab-button" onclick="switchTab('courses')">
+                            📖 课程评价
+                        </button>
+                        <button class="tab-button" onclick="switchTab('groups')">
+                            👨‍👩‍👧‍👦 学习小组
+                        </button>
+                    </div>
+
+                    <!-- 失物招领内容 -->
+                    <div id="lost-found" class="tab-content active">
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="stat-number">{{ lost_found_stats.total or 0 }}</div>
+                                <div class="stat-label">总数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ lost_found_stats.pending or 0 }}</div>
+                                <div class="stat-label">待审核</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ lost_found_stats.approved or 0 }}</div>
+                                <div class="stat-label">已通过</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ lost_found_stats.rejected or 0 }}</div>
+                                <div class="stat-label">已拒绝</div>
+                            </div>
+                        </div>
+
+                        <div class="content-list">
+                            <div class="list-header">
+                                <h3 class="list-title">失物招领列表</h3>
+                                <div class="filter-buttons">
+                                    <button class="filter-btn active" onclick="filterContent('lost-found', 'all')">全部</button>
+                                    <button class="filter-btn" onclick="filterContent('lost-found', 'pending')">待审核</button>
+                                    <button class="filter-btn" onclick="filterContent('lost-found', 'approved')">已通过</button>
+                                    <button class="filter-btn" onclick="filterContent('lost-found', 'rejected')">已拒绝</button>
+                                </div>
+                            </div>
+
+                            {% if lost_found_items %}
+                                {% for item in lost_found_items %}
+                                <div class="content-item" data-status="{{ item.status or 'pending' }}">
+                                    <div class="content-info">
+                                        <div class="content-title">{{ item.title }}</div>
+                                        <div class="content-meta">
+                                            <span>👤 {{ item.user.student_id or '匿名用户' }}</span>
+                                            <span>📅 {{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '未知时间' }}</span>
+                                            <span>📍 {{ item.location or '未指定地点' }}</span>
+                                        </div>
+                                        <div class="content-description">
+                                            {{ item.description[:100] }}{{ '...' if item.description and item.description|length > 100 else '' }}
+                                        </div>
+                                        <div class="content-tags">
+                                            <span class="tag">{{ '寻物' if item.item_type == 'lost' else '招领' }}</span>
+                                            {% if item.category %}
+                                                <span class="tag">{{ item.category }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="content-actions">
+                                        <div class="status-badge status-{{ item.status or 'pending' }}">
+                                            {% if item.status == 'approved' %}
+                                                已通过
+                                            {% elif item.status == 'rejected' %}
+                                                已拒绝
+                                            {% else %}
+                                                待审核
+                                            {% endif %}
+                                        </div>
+                                        {% if not item.status or item.status == 'pending' %}
+                                            <form method="POST" action="{{ url_for('admin.approve_lost_found', item_id=item.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn-sm btn-success">通过</button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('admin.reject_lost_found', item_id=item.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn-sm btn-danger">拒绝</button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="#" class="btn-sm btn-info">详情</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <div class="empty-icon">🔍</div>
+                                    <p>暂无失物招领信息</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 二手书籍内容 -->
+                    <div id="books" class="tab-content">
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <div class="stat-number">{{ books_stats.total or 0 }}</div>
+                                <div class="stat-label">总数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ books_stats.pending or 0 }}</div>
+                                <div class="stat-label">待审核</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ books_stats.approved or 0 }}</div>
+                                <div class="stat-label">已通过</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ books_stats.rejected or 0 }}</div>
+                                <div class="stat-label">已拒绝</div>
+                            </div>
+                        </div>
+
+                        <div class="content-list">
+                            <div class="list-header">
+                                <h3 class="list-title">二手书籍列表</h3>
+                                <div class="filter-buttons">
+                                    <button class="filter-btn active" onclick="filterContent('books', 'all')">全部</button>
+                                    <button class="filter-btn" onclick="filterContent('books', 'pending')">待审核</button>
+                                    <button class="filter-btn" onclick="filterContent('books', 'approved')">已通过</button>
+                                    <button class="filter-btn" onclick="filterContent('books', 'rejected')">已拒绝</button>
+                                </div>
+                            </div>
+
+                            {% if books %}
+                                {% for book in books %}
+                                <div class="content-item" data-status="{{ book.status or 'pending' }}">
+                                    <div class="content-info">
+                                        <div class="content-title">{{ book.title }}</div>
+                                        <div class="content-meta">
+                                            <span>👤 {{ book.user.student_id or '匿名用户' }}</span>
+                                            <span>📅 {{ book.created_at.strftime('%Y-%m-%d %H:%M') if book.created_at else '未知时间' }}</span>
+                                            <span>💰 ¥{{ book.price or '面议' }}</span>
+                                        </div>
+                                        <div class="content-description">
+                                            {{ book.description[:100] }}{{ '...' if book.description and book.description|length > 100 else '' }}
+                                        </div>
+                                        <div class="content-tags">
+                                            {% if book.author %}
+                                                <span class="tag">{{ book.author }}</span>
+                                            {% endif %}
+                                            {% if book.condition %}
+                                                <span class="tag">{{ book.condition }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="content-actions">
+                                        <div class="status-badge status-{{ book.status or 'pending' }}">
+                                            {% if book.status == 'approved' %}
+                                                已通过
+                                            {% elif book.status == 'rejected' %}
+                                                已拒绝
+                                            {% else %}
+                                                待审核
+                                            {% endif %}
+                                        </div>
+                                        {% if not book.status or book.status == 'pending' %}
+                                            <form method="POST" action="{{ url_for('admin.approve_book', book_id=book.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn-sm btn-success">通过</button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('admin.reject_book', book_id=book.id) }}" style="display: inline;">
+                                                <button type="submit" class="btn-sm btn-danger">拒绝</button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="#" class="btn-sm btn-info">详情</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <div class="empty-icon">📚</div>
+                                    <p>暂无二手书籍信息</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 课程评价内容 -->
+                    <div id="courses" class="tab-content">
+                        <div class="empty-state">
+                            <div class="empty-icon">📖</div>
+                            <p>课程评价管理功能开发中...</p>
+                        </div>
+                    </div>
+
+                    <!-- 学习小组内容 -->
+                    <div id="groups" class="tab-content">
+                        <div class="empty-state">
+                            <div class="empty-icon">👨‍👩‍👧‍👦</div>
+                            <p>学习小组管理功能开发中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有选项卡内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有按钮的活跃状态
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 显示选中的选项卡内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活对应的按钮
+            event.target.classList.add('active');
+        }
+
+        function filterContent(contentType, status) {
+            const items = document.querySelectorAll(`#${contentType} .content-item`);
+            const buttons = document.querySelectorAll(`#${contentType} .filter-btn`);
+            
+            // 更新按钮状态
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 过滤内容项
+            items.forEach(item => {
+                const itemStatus = item.getAttribute('data-status') || 'pending';
+                if (status === 'all' || itemStatus === status) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

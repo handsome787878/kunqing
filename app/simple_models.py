@@ -95,6 +95,12 @@ class SimpleUser:
         import bcrypt
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
+    def is_admin_user(self):
+        """检查是否为管理员用户"""
+        # 简化版：学号以admin开头或特定学号为管理员
+        admin_accounts = ['admin', '2021001']  # 可以根据需要添加更多管理员账号
+        return self.student_id in admin_accounts or self.student_id.startswith('admin')
+    
     @staticmethod
     def create(student_id, email, password):
         """创建新用户并保存到SQLite数据库"""
@@ -134,7 +140,21 @@ class SimpleUser:
         conn.close()
         
         if row:
-            return SimpleUser(*row)
+            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login
+            return SimpleUser(
+                id=row[0],
+                student_id=row[1], 
+                email=row[2],
+                password_hash=row[3],
+                real_name=row[4],
+                college=row[5],
+                major=row[6],
+                grade=row[7],
+                phone=row[8],
+                avatar=row[9],
+                create_time=row[10],
+                last_login=row[11]
+            )
         return None
 
     @staticmethod
@@ -148,7 +168,21 @@ class SimpleUser:
         conn.close()
         
         if row:
-            return SimpleUser(*row)
+            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login
+            return SimpleUser(
+                id=row[0],
+                student_id=row[1], 
+                email=row[2],
+                password_hash=row[3],
+                real_name=row[4],
+                college=row[5],
+                major=row[6],
+                grade=row[7],
+                phone=row[8],
+                avatar=row[9],
+                create_time=row[10],
+                last_login=row[11]
+            )
         return None
 
     @staticmethod
@@ -162,30 +196,23 @@ class SimpleUser:
         conn.close()
         
         if row:
-            return SimpleUser(*row)
+            # 数据库字段顺序: id, student_id, email, password_hash, real_name, college, major, grade, phone, avatar, create_time, last_login
+            return SimpleUser(
+                id=row[0],
+                student_id=row[1], 
+                email=row[2],
+                password_hash=row[3],
+                real_name=row[4],
+                college=row[5],
+                major=row[6],
+                grade=row[7],
+                phone=row[8],
+                avatar=row[9],
+                create_time=row[10],
+                last_login=row[11]
+            )
         return None
     
-    @staticmethod
-    def get_by_email(email):
-        """根据邮箱获取用户"""
-        for user in simple_db.users:
-            if user.email == email:
-                return user
-        return None
-    
-    @staticmethod
-    def get_by_username(username):
-        """根据用户名获取用户（这里使用学号作为用户名）"""
-        for user in simple_db.users:
-            if user.student_id == username:
-                return user
-        return None
-    
-    @staticmethod
-    def create(username, email, password, real_name=None):
-        """创建新用户"""
-        return SimpleUser(username, email, password, real_name)
-
 
 class SimpleLostFound:
     """简化的失物招领模型"""

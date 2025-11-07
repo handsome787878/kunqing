@@ -47,14 +47,17 @@ def verify_captcha(email: str, code: str) -> bool:
 
 
 def send_email(to_email: str, subject: str, body: str) -> bool:
-    """发送邮件"""
+    """发送邮件，支持 TLS 与 SSL，并记录异常日志"""
     server = current_app.config.get("MAIL_SERVER")
-    port = current_app.config.get("MAIL_PORT")
+    port = int(current_app.config.get("MAIL_PORT") or 587)
     username = current_app.config.get("MAIL_USERNAME")
     password = current_app.config.get("MAIL_PASSWORD")
-    sender = current_app.config.get("MAIL_DEFAULT_SENDER")
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER") or username
+    use_tls = current_app.config.get("MAIL_USE_TLS", True)
+    use_ssl = current_app.config.get("MAIL_USE_SSL", False)
 
     if not server or not sender:
+        current_app.logger.warning("邮件配置缺失：MAIL_SERVER 或 MAIL_DEFAULT_SENDER 未设置")
         return False
 
     message = MIMEText(body, "plain", "utf-8")
@@ -63,16 +66,76 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
     message["To"] = to_email
 
     try:
-        with smtplib.SMTP(server, port) as smtp:
-            use_tls = current_app.config.get("MAIL_USE_TLS", True)
+        # 记录详细日志便于排查
+        current_app.logger.info(
+            f"准备发送邮件: server={server}, port={port}, use_ssl={use_ssl}, use_tls={use_tls}, sender={sender}, to={to_email}"
+        )
+        # 根据端口或配置选择 SSL/TLS
+        if use_ssl or port == 465:
+            smtp = smtplib.SMTP_SSL(server, port)
+        else:
+            smtp = smtplib.SMTP(server, port)
             if use_tls:
-                smtp.starttls()
-            if username and password:
-                smtp.login(username, password)
-            smtp.sendmail(sender, [to_email], message.as_string())
+                try:
+                    smtp.starttls()
+                except Exception:
+                    current_app.logger.warning("SMTP starttls 失败，继续尝试登录发送")
+
+        if username and password:
+            smtp.login(username, password)
+        smtp.sendmail(sender, [to_email], message.as_string())
+        smtp.quit()
         return True
     except Exception:
+        current_app.logger.exception("邮件发送失败")
         return False
+
+
+def send_email_with_result(to_email: str, subject: str, body: str):
+    """发送邮件（测试用途），返回 (ok, error) 以便前端展示。
+    不影响生产逻辑，尽量与 send_email 保持一致行为。
+    """
+    server = current_app.config.get("MAIL_SERVER")
+    port = int(current_app.config.get("MAIL_PORT") or 587)
+    username = current_app.config.get("MAIL_USERNAME")
+    password = current_app.config.get("MAIL_PASSWORD")
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER") or username
+    use_tls = current_app.config.get("MAIL_USE_TLS", True)
+    use_ssl = current_app.config.get("MAIL_USE_SSL", False)
+
+    if not server or not sender:
+        current_app.logger.warning("邮件配置缺失：MAIL_SERVER 或 MAIL_DEFAULT_SENDER 未设置")
+        return False, "MissingConfig(MAIL_SERVER/MAIL_DEFAULT_SENDER)"
+
+    message = MIMEText(body, "plain", "utf-8")
+    message["Subject"] = subject
+    message["From"] = sender
+    message["To"] = to_email
+
+    try:
+        current_app.logger.info(
+            f"准备发送测试邮件: server={server}, port={port}, use_ssl={use_ssl}, use_tls={use_tls}, sender={sender}, to={to_email}"
+        )
+        if use_ssl or port == 465:
+            smtp = smtplib.SMTP_SSL(server, port)
+        else:
+            smtp = smtplib.SMTP(server, port)
+            if use_tls:
+                try:
+                    smtp.starttls()
+                except Exception:
+                    current_app.logger.warning("SMTP starttls 失败，继续尝试登录发送")
+
+        if username and password:
+            smtp.login(username, password)
+        smtp.sendmail(sender, [to_email], message.as_string())
+        smtp.quit()
+        return True, None
+    except Exception as e:
+        current_app.logger.exception("测试邮件发送失败")
+        # 返回异常类型与消息，便于前端展示
+        err = f"{e.__class__.__name__}: {str(e)}"
+        return False, err
 
 
 def send_verification_email(email: str) -> bool:

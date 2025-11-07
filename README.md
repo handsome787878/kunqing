@@ -50,7 +50,7 @@
 5. **访问应用**
    - 打开浏览器访问: http://127.0.0.1:5000
    - 使用测试账户登录：
-     - **管理员账户**: 用户名: `admin` 密码: `admin123` (管理员级别: 2)
+     - **管理员账户**: 用户名: `admin` 密码: `123456` (管理员级别: 2)
      - **普通用户**: 用户名: `2021001` 密码: `password123`
      - **普通用户**: 用户名: `2021002` 密码: `password123`
 
@@ -89,6 +89,38 @@ init_db()
 # 创建示例数据
 init_sample_data()
 ```
+
+### 管理员登录与权限说明
+- 管理员登录入口：访问 `http://127.0.0.1:5000/admin/login`
+- 设置页权限：`/admin/settings` 需要“超级管理员”权限（`admin_level=2` 或用户名为 `admin`）。
+- 首次登录迁移：如果数据库中管理员密码是旧版 SHA256（如 `123456`），系统会在首次登录时自动迁移为 bcrypt 存储，无需手动操作。
+- 检查数据库用户：运行 `python scripts/check_db.py` 可查看当前 `kunqing.sqlite` 中的用户与权限等级。
+
+### 邮件 SMTP 配置与测试
+系统支持在“管理员后台 → 系统设置”页面进行 SMTP 自检与邮件发送测试，并在页面内联展示结果（包含耗时与错误信息）。
+
+- 环境配置（可放入系统环境变量或 `config.py`）：
+  - `MAIL_SERVER`：SMTP服务器地址，例如 `smtp.qq.com`
+  - `MAIL_PORT`：SMTP端口，例如 `587`
+  - `MAIL_USE_TLS`：是否使用 TLS（推荐）
+  - `MAIL_USE_SSL`：是否使用 SSL（通常与 TLS 互斥）
+  - `MAIL_USERNAME`：SMTP登录用户名（通常为发件邮箱）
+  - `MAIL_PASSWORD`：SMTP登录密码或授权码（QQ邮箱需使用授权码）
+  - `MAIL_DEFAULT_SENDER`：默认发件人邮箱
+
+- 使用方法：
+  - 在“测试收件人”输入框中填写目标邮箱（必填）。
+  - 点击“测试SMTP配置”或“测试邮件”按钮发起测试。
+  - 结果面板会显示：`ok`、`server`、`port`、`use_tls`、`sender`、`recipient`、`duration_ms`、`error` 等字段。
+
+- QQ 邮箱示例：
+  - `MAIL_SERVER=smtp.qq.com`
+  - `MAIL_PORT=587`
+  - `MAIL_USE_TLS=True`
+  - `MAIL_USERNAME=你的QQ邮箱`
+  - `MAIL_PASSWORD=你的QQ邮箱授权码`
+  - `MAIL_DEFAULT_SENDER=你的QQ邮箱`
+
 
 ### 添加新功能
 1. 在 `app/routes/` 下创建新的路由文件

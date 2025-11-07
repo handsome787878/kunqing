@@ -1,1 +1,20 @@
-在项目运行时，由于navict for mysql 与软件版本不兼容，在运行数据库文件时报错需要你们寻找新的，能够兼容的数据库来实现
+当前已知问题与建议：
+
+1) 管理员设置页 403 Forbidden
+- 现象：访问 `http://127.0.0.1:5000/admin/settings` 返回 403。
+- 原因：该路由使用 `super_admin_required` 装饰器保护，仅超管可访问（`admin_level>=2` 或学号为 `admin`）。
+- 解决：先访问 `/admin/login` 以管理员登录；使用账号 `admin` 密码 `123456`。登录后再访问设置页。
+
+2) 数据库脚本差异与混用风险
+- 现象：仓库存在 `create_admin.py`/`init_database.py` 使用 `simple_campus.db`，而应用实际使用 `kunqing.sqlite`。
+- 风险：在错误的数据库文件上创建用户，应用无法识别，导致登录与权限异常。
+- 建议：仅使用 `kunqing.sqlite`，并通过以下脚本检查/初始化：
+  - 检查用户：`python scripts/check_db.py`
+  - 初始化SQLAlchemy并创建超管：`python scripts/init_sqlalchemy_db.py`
+
+3) MySQL工具兼容性（原有问题保留）
+- 在项目运行时，由于 Navicat for MySQL 与软件版本不兼容，在运行数据库文件时报错。建议选择兼容的 MySQL 客户端或在开发阶段使用 SQLite。
+
+4) 邮件发送失败排查建议
+- 检查环境变量：`MAIL_SERVER`、`MAIL_PORT`、`MAIL_USE_TLS`/`MAIL_USE_SSL`、`MAIL_USERNAME`、`MAIL_PASSWORD`、`MAIL_DEFAULT_SENDER`。
+- 使用“管理员后台 → 系统设置”页面的“测试收件人”与测试按钮进行自检；结果面板会显示 `duration_ms` 与 `error` 字段以便定位问题。

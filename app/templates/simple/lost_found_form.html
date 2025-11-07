@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}发布失物招领（简版）{% endblock %}
+{% block content %}
+  <h2 class="h4">📝 发布失物招领</h2>
+  <p class="text-muted">帮助同学们找回丢失的物品，或者发布拾到的物品信息</p>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="POST">
+        <div class="mb-3">
+          <label class="form-label">当前学校</label>
+          {% if current_school %}
+            <div class="form-text">{{ current_school.name }}（发布将归属该学校）</div>
+          {% else %}
+            <div class="form-text text-danger">尚未选择学校，请先<a href="{{ url_for('school.select') }}">选择所在学校</a>再发布</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="type" class="form-label">类型 *</label>
+          <select id="type" name="type" class="form-select" required>
+            <option value="">请选择类型</option>
+            <option value="lost">🔍 失物 - 我丢失了物品</option>
+            <option value="found">📦 招领 - 我拾到了物品</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="title" class="form-label">标题 *</label>
+          <input type="text" id="title" name="title" class="form-control" required placeholder="请简要描述物品">
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">详细描述</label>
+          <textarea id="description" name="description" class="form-control" rows="4" placeholder="请详细描述物品的特征、颜色、大小等信息"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="location" class="form-label">相关地点</label>
+          <input type="text" id="location" name="location" class="form-control" placeholder="丢失地点或拾到地点">
+        </div>
+
+        <div class="mb-3">
+          <label for="contact" class="form-label">联系方式</label>
+          <input type="text" id="contact" name="contact" class="form-control" placeholder="QQ、微信、电话等联系方式">
+        </div>
+
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="is_public" name="is_public">
+          <label class="form-check-label" for="is_public">跨校公开（允许出现在“全部学校”视图）</label>
+        </div>
+
+        {% if schools and schools|length > 0 %}
+        <div class="mb-3">
+          <label for="school_id" class="form-label">选择学校（管理员）</label>
+          <select id="school_id" name="school_id" class="form-select">
+            {% for s in schools %}
+              <option value="{{ s.id }}" {% if current_school and s.id == current_school.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">管理员可选择其他学校发布；普通用户默认当前学校</div>
+        </div>
+        {% endif %}
+
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary">发布信息</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('lost_found.index') }}" class="text-decoration-none">← 返回失物招领</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}失物招领（简版）{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h4 mb-0">🔍 失物招领</h2>
+      <small class="text-muted">
+        帮助同学们找回丢失的物品，传递校园温暖
+        {% if current_school %}
+          · 当前学校：<strong>{{ current_school.name }}</strong>
+        {% else %}
+          · 请先选择所在学校
+        {% endif %}
+      </small>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('lost_found.index') }}">本校数据</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('lost_found.index', scope='all') }}">全部学校</a>
+      <a class="btn btn-primary" href="{{ url_for('lost_found.create') }}">📝 发布失物招领</a>
+    </div>
+  </div>
+
+  {% if items %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+      {% for item in items %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="h6 mb-0">{{ '🔍' if item.type == 'lost' else '📦' }} {{ item.title }}</h3>
+              <span class="badge {{ 'text-bg-success' if item.status == 'active' else 'text-bg-secondary' }}">{{ item.status }}</span>
+            </div>
+            <div class="card-body">
+              <p class="mb-1"><strong>类型:</strong> {{ '失物' if item.type == 'lost' else '招领' }}</p>
+              {% if item.school_name %}<p class="mb-1"><strong>学校:</strong> {{ item.school_name }}</p>{% endif %}
+              {% if item.description %}<p class="mb-1"><strong>描述:</strong> {{ item.description }}</p>{% endif %}
+              {% if item.location %}<p class="mb-1"><strong>地点:</strong> {{ item.location }}</p>{% endif %}
+              {% if item.contact %}<p class="mb-1"><strong>联系方式:</strong> {{ item.contact }}</p>{% endif %}
+              {% if item.is_public %}<span class="badge text-bg-info">跨校公开</span>{% endif %}
+              <p class="text-muted mb-0"><strong>发布时间:</strong> {{ item.create_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">暂无失物招领信息</div>
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="text-decoration-none">← 返回首页</a>
+  </div>
+{% endblock %}

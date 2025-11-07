@@ -349,7 +349,7 @@ class SimpleUser:
 class SimpleLostFound:
     """简化的失物招领模型"""
     
-    def __init__(self, user_id, type, title, description="", location="", contact=""):
+    def __init__(self, user_id, type, title, description="", location="", contact="", school_id=None, school_name=None, is_public=False):
         self.id = simple_db.get_next_id()
         self.user_id = user_id
         self.type = type  # 'lost' or 'found'
@@ -359,6 +359,10 @@ class SimpleLostFound:
         self.contact = contact
         self.status = "open"
         self.create_time = datetime.now()
+        # 学校信息与跨校公开
+        self.school_id = school_id
+        self.school_name = school_name
+        self.is_public = bool(is_public)
         
         # 添加到数据库
         simple_db.lost_found.append(self)
@@ -366,6 +370,14 @@ class SimpleLostFound:
     @staticmethod
     def get_all():
         return simple_db.lost_found
+    
+    @staticmethod
+    def get_by_school(school_id):
+        return [item for item in simple_db.lost_found if getattr(item, "school_id", None) == school_id]
+    
+    @staticmethod
+    def get_all_public():
+        return [item for item in simple_db.lost_found if getattr(item, "is_public", False)]
     
     @staticmethod
     def get_by_id(item_id):

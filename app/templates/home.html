@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}首页 - Kunqing Campus{% endblock %}
+{% block content %}
+<section class="text-center mb-4">
+  <h1 class="display-5">🎓 鲲擎校园</h1>
+  <p class="text-muted">您的校园生活助手，让学习与交流更便捷</p>
+</section>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">🔐 用户认证</h5>
+        {% if current_user.is_authenticated %}
+          <p class="card-text text-muted">已登录：{{ current_user.email or current_user.student_id }}</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="{{ url_for('auth.profile') }}">已登录，去资料管理</a>
+            <a class="btn btn-link" href="{{ url_for('auth.index') }}">前往认证中心</a>
+          </div>
+        {% else %}
+          <p class="card-text text-muted">未登录：请先登录或注册</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="{{ url_for('auth.login') }}">未登录，去登录</a>
+            <a class="btn btn-link" href="{{ url_for('auth.index') }}">前往认证中心</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">🧭 失物招领</h5>
+        <p class="card-text text-muted">发布与浏览校园失物信息</p>
+        <a class="btn btn-primary" href="{{ url_for('lost_found.index') }}">进入模块</a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">🏫 学校定位</h5>
+        {% if current_school %}
+          <p class="card-text">当前学校：<strong>{{ current_school.name }}</strong></p>
+          <p class="card-text text-muted">位置：{{ current_school.province }} · {{ current_school.city }}</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="{{ url_for('school.select') }}">切换学校</a>
+          </div>
+        {% else %}
+          <p class="card-text">尚未选择学校</p>
+          <p class="card-text text-muted">请选择所在学校以显示对应内容</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="{{ url_for('school.select') }}">选择所在学校</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">📚 二手书交易</h5>
+        <p class="card-text text-muted">买卖教材，节约成本更环保</p>
+        <a class="btn btn-primary" href="{{ url_for('books.index') }}">进入模块</a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">📖 课程评价</h5>
+        <p class="card-text text-muted">查看课程信息与评价</p>
+        <a class="btn btn-primary" href="{{ url_for('courses.index') }}">进入模块</a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">🤝 学习小组</h5>
+        <p class="card-text text-muted">创建与加入学习小组</p>
+        <a class="btn btn-primary" href="{{ url_for('study_groups.index') }}">进入模块</a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">🛡️ 管理后台</h5>
+        <p class="card-text text-muted">用户与内容管理（需要权限）</p>
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">打开后台</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

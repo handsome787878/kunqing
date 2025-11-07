@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}选择所在学校{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>选择所在学校</span>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('index') }}">返回首页</a>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="schoolSearch" class="form-label">搜索学校</label>
+          <input id="schoolSearch" type="text" class="form-control" placeholder="输入学校名称关键字...">
+        </div>
+        <div id="results" class="list-group mb-3">
+          {% for s in schools %}
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('school.set_current_school', school_id=s.id) }}">
+            <span>
+              <strong>{{ s.name }}</strong>
+              <small class="text-muted ms-2">{{ s.province }} · {{ s.city }}</small>
+            </span>
+            <span class="badge bg-primary rounded-pill">选择</span>
+          </a>
+          {% endfor %}
+        </div>
+        <p class="text-muted">支持搜索与切换，不同学校将呈现对应内容（逐步接入各模块）。</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const input = document.getElementById('schoolSearch');
+    const resultsEl = document.getElementById('results');
+    let timer;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const q = input.value.trim();
+        const resp = await fetch(`/school/search?q=${encodeURIComponent(q)}`);
+        const data = await resp.json();
+        resultsEl.innerHTML = '';
+        data.forEach(s => {
+          const a = document.createElement('a');
+          a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+          a.href = `/school/set/${s.id}`;
+          a.innerHTML = `<span><strong>${s.name}</strong><small class="text-muted ms-2">${s.province || ''} · ${s.city || ''}</small></span><span class="badge bg-primary rounded-pill">选择</span>`;
+          resultsEl.appendChild(a);
+        });
+      }, 250);
+    });
+  </script>
+</div>
+{% endblock %}

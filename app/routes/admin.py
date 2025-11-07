@@ -1,6 +1,6 @@
 """管理员后台路由"""
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.utils.admin_decorators import admin_required, super_admin_required, user_management_required, content_management_required
@@ -444,3 +444,43 @@ def settings():
         return redirect(url_for('admin.settings'))
     
     return render_template('admin/settings.html')
+
+
+@admin_bp.route('/settings/test-smtp', methods=['POST'])
+@super_admin_required
+def test_smtp():
+    """测试当前 SMTP 配置并返回结果（含耗时与错误信息）。"""
+    # 获取测试收件人
+    email = request.form.get('email')
+    if request.is_json and not email:
+        data = request.get_json() or {}
+        email = data.get('email')
+
+    cfg = current_app.config
+    recipient = email or cfg.get('MAIL_USERNAME') or cfg.get('MAIL_DEFAULT_SENDER')
+    if not recipient:
+        return jsonify({
+            'ok': False,
+            'error': '缺少收件人，请提供 email 或配置 MAIL_USERNAME/MAIL_DEFAULT_SENDER'
+        }), 400
+
+    from time import time
+    from app.utils.helpers import send_email_with_result
+    subject = 'SMTP 测试 - 鲲擎校园'
+    body = f'这是一封 SMTP 测试邮件\n时间: {datetime.utcnow().isoformat()}'
+    t0 = time()
+    ok, err = send_email_with_result(recipient, subject, body)
+    duration_ms = int((time() - t0) * 1000)
+
+    details = {
+        'server': cfg.get('MAIL_SERVER'),
+        'port': int(cfg.get('MAIL_PORT') or 587),
+        'use_tls': cfg.get('MAIL_USE_TLS', True),
+        'use_ssl': cfg.get('MAIL_USE_SSL', False),
+        'sender': cfg.get('MAIL_DEFAULT_SENDER') or cfg.get('MAIL_USERNAME'),
+        'recipient': recipient,
+        'duration_ms': duration_ms,
+        'error': err,
+    }
+
+    return jsonify({'ok': ok, 'details': details})

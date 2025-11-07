@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}课程评价{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>🎯 课程评价</h2>
+  <a href="{{ url_for('courses.create') }}" class="btn btn-primary">添加课程</a>
+ </div>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  {% for course in courses %}
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ course.course_name }}</h5>
+        <p class="card-text">代码：{{ course.course_code }}</p>
+        <p class="card-text">教师：{{ course.teacher or '未知' }}</p>
+        <p class="card-text">学院：{{ course.college or '未填写' }}</p>
+        {% if course.description %}
+        <p class="card-text text-muted">{{ course.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col">
+    <div class="alert alert-info">暂无课程信息</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

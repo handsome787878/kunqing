@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}发布二手书{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header">发布二手书</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">书名</label>
+            <input type="text" name="book_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">作者</label>
+            <input type="text" name="author" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">价格</label>
+            <input type="number" name="price" step="0.01" min="0" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">成色</label>
+            <select name="condition" class="form-select">
+              <option value="">请选择</option>
+              <option value="全新">全新</option>
+              <option value="九成新">九成新</option>
+              <option value="八成新">八成新</option>
+              <option value="七成新">七成新</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">描述</label>
+            <textarea name="description" rows="4" class="form-control"></textarea>
+          </div>
+          <button class="btn btn-primary w-100">发布</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

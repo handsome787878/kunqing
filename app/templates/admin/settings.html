@@ -585,6 +585,14 @@
                             <div class="btn-group">
                                 <button type="button" class="btn btn-primary" onclick="saveEmailSettings()">保存设置</button>
                                 <button type="button" class="btn btn-warning" onclick="testEmail()">测试邮件</button>
+                                <div class="form-group" style="margin-left:12px;">
+                                    <label class="form-label">测试收件人（必填）</label>
+                                    <input type="email" id="smtp_test_recipient" class="form-input" placeholder="请输入接收测试的邮箱" required>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="testSmtp()">测试SMTP配置</button>
+                            </div>
+                            <div id="smtp_test_result" class="test-result-panel" style="margin-top:12px; padding:12px; border:1px solid #ddd; border-radius:6px; background:#fafafa;">
+                                <div style="color:#666;">尚未进行测试</div>
                             </div>
                         </div>
                     </div>
@@ -710,9 +718,68 @@
             // 这里可以添加 AJAX 请求保存设置
         }
 
+        function renderSmtpResult(data) {
+            const box = document.getElementById('smtp_test_result');
+            if (!box) return;
+            const d = data.details || {};
+            const ok = !!data.ok;
+            const color = ok ? '#0a7f37' : '#b00020';
+            const status = ok ? '✅ 测试成功' : '❌ 测试失败';
+            box.innerHTML = `
+                <div style="font-weight:600;color:${color};margin-bottom:8px;">${status}</div>
+                <div style="line-height:1.8;">
+                    <div>服务器: <code>${d.server || ''}</code></div>
+                    <div>端口: <code>${d.port || ''}</code></div>
+                    <div>TLS: <code>${d.use_tls ? '是' : '否'}</code></div>
+                    <div>SSL: <code>${d.use_ssl ? '是' : '否'}</code></div>
+                    <div>发件人: <code>${d.sender || ''}</code></div>
+                    <div>收件人: <code>${d.recipient || ''}</code></div>
+                    <div>耗时: <code>${(d.duration_ms ?? '').toString()} ms</code></div>
+                    ${d.error ? `<div>错误: <code>${d.error}</code></div>` : ''}
+                </div>
+            `;
+        }
+
         function testEmail() {
-            alert('正在发送测试邮件...');
-            // 这里可以添加 AJAX 请求测试邮件发送
+            const emailInput = document.getElementById('smtp_test_recipient');
+            const email = emailInput ? emailInput.value.trim() : '';
+            const formData = new FormData();
+            if (!email) {
+                const box = document.getElementById('smtp_test_result');
+                if (box) box.innerHTML = '<div style="color:#b00020;">请填写测试收件人邮箱</div>';
+                return;
+            }
+            formData.append('email', email);
+            const box = document.getElementById('smtp_test_result');
+            if (box) box.innerHTML = '<div style="color:#666;">正在发送测试邮件...</div>';
+            fetch('{{ url_for('admin.test_smtp') }}', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(renderSmtpResult)
+                .catch(err => {
+                    const box = document.getElementById('smtp_test_result');
+                    if (box) box.innerHTML = `<div style="color:#b00020;">请求失败: ${err}</div>`;
+                });
+        }
+
+        function testSmtp() {
+            const emailInput = document.getElementById('smtp_test_recipient');
+            const email = emailInput ? emailInput.value.trim() : '';
+            const formData = new FormData();
+            if (!email) {
+                const box = document.getElementById('smtp_test_result');
+                if (box) box.innerHTML = '<div style="color:#b00020;">请填写测试收件人邮箱</div>';
+                return;
+            }
+            formData.append('email', email);
+            const box = document.getElementById('smtp_test_result');
+            if (box) box.innerHTML = '<div style="color:#666;">正在进行SMTP自检...</div>';
+            fetch('{{ url_for('admin.test_smtp') }}', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(renderSmtpResult)
+                .catch(err => {
+                    const box = document.getElementById('smtp_test_result');
+                    if (box) box.innerHTML = `<div style="color:#b00020;">请求失败: ${err}</div>`;
+                });
         }
 
         function saveUploadSettings() {

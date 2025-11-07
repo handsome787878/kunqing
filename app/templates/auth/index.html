@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}认证中心 - Kunqing Campus{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="p-3 rounded bg-light border d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary-subtle border d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+          {% set initial = (current_user.real_name or current_user.student_id or current_user.email or 'U')[:1] if current_user.is_authenticated else 'U' %}
+          <span class="fw-bold">{{ initial }}</span>
+        </div>
+        <div>
+          <h3 class="mb-0">用户认证中心</h3>
+          <p class="text-muted mb-0">登录、注册、资料管理与密码重置的统一入口。</p>
+        </div>
+      </div>
+      {% if current_user.is_authenticated %}
+        <div>
+          {% if current_user.admin_level >= 2 %}
+            <span class="badge bg-danger">超级管理员</span>
+          {% elif current_user.admin_level >= 1 %}
+            <span class="badge bg-warning text-dark">管理员</span>
+          {% else %}
+            <span class="badge bg-secondary">普通用户</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <div class="col-12">
+    <div class="card mb-2">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <div class="fw-bold">当前用户：{{ current_user.real_name or current_user.student_id or current_user.email }}</div>
+            <div class="text-muted">邮箱：{{ current_user.email or '未设置' }}</div>
+          </div>
+          <div class="text-end">
+            <div class="text-muted">最近登录：
+              {% if current_user.last_login %}
+                {{ current_user.last_login.strftime('%Y-%m-%d %H:%M') }} （{{ current_user.last_login | timeago }})
+              {% else %}
+                从未登录
+              {% endif %}
+            </div>
+            <div class="mt-2 d-flex justify-content-end gap-2">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('auth.profile') }}">去资料管理</a>
+              <a class="btn btn-outline-danger btn-sm" href="{{ url_for('auth.logout') }}">退出登录</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">登录</h5>
+        <p class="card-text flex-grow-1">使用学号或邮箱登录账户，支持记住登录。</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">前往登录</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">注册</h5>
+        <p class="card-text flex-grow-1">创建新账户，邮箱验证码校验，支持学号唯一性。</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-success">前往注册</a>
+      </div>
+    </div>
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">个人资料</h5>
+        <p class="card-text flex-grow-1">更新姓名、学院、专业、年级与电话等信息。</p>
+        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary">管理资料</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">退出登录</h5>
+        <p class="card-text flex-grow-1">安全退出当前会话。</p>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">退出</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">密码重置</h5>
+        <p class="card-text flex-grow-1">通过邮箱验证码重置密码。</p>
+        <a href="{{ url_for('auth.password_reset') }}" class="btn btn-warning">重置密码</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12">
+    <a class="btn btn-link" href="{{ url_for('index') }}">返回首页</a>
+  </div>
+</div>
+{% endblock %}

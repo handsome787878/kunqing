@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify, render_template_string
 from flask import redirect, url_for, render_template, flash, session
 import time
 from flask_login import login_user, logout_user, current_user
+from datetime import datetime
 
-from ..simple_models import SimpleUser
+from ..models import db, User
 from ..utils.decorators import login_required
 from ..utils.helpers import (
     generate_captcha,
@@ -20,19 +21,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @auth_bp.route("/")
 def index():
-    return render_template_string("""
-    <h2>用户认证</h2>
-    <p>当前用户: {{ current_user.real_name if current_user.is_authenticated else '未登录' }}</p>
-    <ul>
-        <li><a href="{{ url_for('auth.login') }}">登录</a></li>
-        <li><a href="{{ url_for('auth.register') }}">注册</a></li>
-        {% if current_user.is_authenticated %}
-        <li><a href="{{ url_for('auth.profile') }}">个人资料</a></li>
-        <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
-        {% endif %}
-    </ul>
-    <a href="{{ url_for('index') }}">返回首页</a>
-    """)
+    return render_template("auth/index.html")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -50,14 +39,16 @@ def register():
             return jsonify({"error": "请填写所有字段"}), 400
         if password != confirm_password:
             return jsonify({"error": "两次输入的密码不一致"}), 400
-        if SimpleUser.get_by_username(student_id):
+        if User.query.filter_by(student_id=student_id).first():
             return jsonify({"error": "学号已存在"}), 400
-        if SimpleUser.get_by_email(email):
+        if User.query.filter_by(email=email).first():
             return jsonify({"error": "邮箱已被注册"}), 400
         if captcha and not verify_captcha(email, captcha):
             return jsonify({"error": "验证码不正确或已失效"}), 400
-
-        user = SimpleUser.create(student_id, email, password)
+        user = User(student_id=student_id, email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
         return jsonify({"message": "注册成功", "user_id": user.id}), 201
 
     # 表单提交
@@ -70,10 +61,10 @@ def register():
             captcha = form.captcha.data.strip()
 
             # 唯一性校验
-            if SimpleUser.get_by_username(student_id):
+            if User.query.filter_by(student_id=student_id).first():
                 flash("该学号已存在", "error")
                 return render_template("auth/register.html", form=form)
-            if SimpleUser.get_by_email(email):
+            if User.query.filter_by(email=email).first():
                 flash("该邮箱已被注册", "error")
                 return render_template("auth/register.html", form=form)
             # 验证码校验
@@ -81,12 +72,16 @@ def register():
                 flash("验证码不正确或已失效", "error")
                 return render_template("auth/register.html", form=form)
 
-            # 创建用户
-            user = SimpleUser.create(student_id, email, password)
-            if user:
+            # 创建用户（SQLAlchemy）
+            try:
+                user = User(student_id=student_id, email=email)
+                user.set_password(password)
+                db.session.add(user)
+                db.session.commit()
                 flash("注册成功！请登录", "success")
                 return redirect(url_for("auth.login"))
-            else:
+            except Exception:
+                db.session.rollback()
                 flash("注册失败，请稍后重试", "error")
                 return render_template("auth/register.html", form=form)
         else:
@@ -113,10 +108,12 @@ def login():
         if not account or not password:
             return jsonify({"error": "请填写账号和密码"}), 400
 
-        # 支持学号或邮箱
-        user = SimpleUser.get_by_username(account) or SimpleUser.get_by_email(account)
+        # 支持学号或邮箱（SQLAlchemy）
+        user = User.query.filter((User.student_id == account) | (User.email == account)).first()
         if user and user.check_password(password):
             login_user(user)
+            user.last_login = datetime.utcnow()
+            db.session.commit()
             return jsonify({"message": "登录成功", "user_id": user.id})
         return jsonify({"error": "账号或密码错误"}), 401
 
@@ -128,9 +125,11 @@ def login():
             password = form.password.data
             remember = form.remember_me.data
 
-            user = SimpleUser.get_by_username(account) or SimpleUser.get_by_email(account)
+            user = User.query.filter((User.student_id == account) | (User.email == account)).first()
             if user and user.check_password(password):
                 login_user(user, remember=remember)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
                 flash("登录成功！", "success")
                 return redirect(url_for("index"))
             else:
@@ -157,24 +156,17 @@ def profile():
     form = ProfileForm()
     if request.method == "POST":
         if form.validate_on_submit():
-            # 保存到数据库
-            updated = SimpleUser.update_profile(
-                current_user.id,
-                real_name=form.real_name.data.strip() if form.real_name.data else None,
-                college=form.college.data.strip() if form.college.data else None,
-                major=form.major.data.strip() if form.major.data else None,
-                grade=form.grade.data.strip() if form.grade.data else None,
-                phone=form.phone.data.strip() if form.phone.data else None,
-            )
-            # 更新当前会话中的用户对象字段
-            if updated:
-                current_user.real_name = updated.real_name
-                current_user.college = updated.college
-                current_user.major = updated.major
-                current_user.grade = updated.grade
-                current_user.phone = updated.phone
+            # 保存到数据库（SQLAlchemy）
+            try:
+                current_user.real_name = form.real_name.data.strip() if form.real_name.data else None
+                current_user.college = form.college.data.strip() if form.college.data else None
+                current_user.major = form.major.data.strip() if form.major.data else None
+                current_user.grade = form.grade.data.strip() if form.grade.data else None
+                current_user.phone = form.phone.data.strip() if form.phone.data else None
+                db.session.commit()
                 flash("资料已保存", "success")
-            else:
+            except Exception:
+                db.session.rollback()
                 flash("保存失败，请稍后重试", "error")
         else:
             flash("请检查表单输入", "error")
@@ -233,10 +225,11 @@ def password_reset():
             return jsonify({"error": "两次密码不一致"}), 400
         if not verify_captcha(email, captcha):
             return jsonify({"error": "验证码不正确或已失效"}), 400
-        user = SimpleUser.get_by_email(email)
+        user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "邮箱未注册"}), 404
-        SimpleUser.update_password(user.id, new_password)
+        user.set_password(new_password)
+        db.session.commit()
         return jsonify({"message": "密码重置成功"}), 200
 
     # 表单提交
@@ -254,12 +247,13 @@ def password_reset():
             if not verify_captcha(email, captcha):
                 flash("验证码不正确或已失效", "error")
                 return render_template("auth/password_reset.html", form=form)
-            user = SimpleUser.get_by_email(email)
+            user = User.query.filter_by(email=email).first()
             if not user:
                 flash("该邮箱未注册", "error")
                 return render_template("auth/password_reset.html", form=form)
 
-            SimpleUser.update_password(user.id, new_password)
+            user.set_password(new_password)
+            db.session.commit()
             flash("密码已重置，请使用新密码登录", "success")
             return redirect(url_for("auth.login"))
         else:

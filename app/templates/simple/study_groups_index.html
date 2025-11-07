@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}学习小组（简版）{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="h4 mb-0">📚 学习小组</h2>
+      <small class="text-muted">加入学习小组，与志同道合的同学一起学习进步</small>
+    </div>
+    <a href="{{ url_for('study_groups.create') }}" class="btn btn-primary">创建学习小组</a>
+  </div>
+
+  {% if groups %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+      {% for group in groups %}
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">{{ group.title }}</h5>
+              <div class="mb-2 text-muted">
+                <span class="me-3">📖 {{ group.subject or '未指定学科' }}</span>
+                <span class="me-3">👥 {{ group.current_members }}/{{ group.target_members }} 人</span>
+                <span class="badge {{ 'text-bg-success' if group.status == 'open' else 'text-bg-secondary' }}">{{ '开放加入' if group.status == 'open' else '已关闭' }}</span>
+              </div>
+              {% if group.goal %}<p class="mb-2">🎯 {{ group.goal }}</p>{% endif %}
+              <small class="text-muted">📅 创建于 {{ group.create_time.strftime('%Y-%m-%d') }}</small>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">暂无学习小组，快来创建第一个吧！</div>
+  {% endif %}
+
+  <div class="text-center mt-4">
+    <a href="{{ url_for('index') }}" class="text-decoration-none">← 返回首页</a>
+  </div>
+{% endblock %}

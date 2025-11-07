@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}添加课程{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header">添加课程</div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">课程代码</label>
+            <input type="text" name="course_code" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">课程名称</label>
+            <input type="text" name="course_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">教师</label>
+            <input type="text" name="teacher" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">学院</label>
+            <input type="text" name="college" class="form-control">
+          </div>
+          <button class="btn btn-primary w-100">添加</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

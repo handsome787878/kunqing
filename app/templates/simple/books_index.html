@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}二手书交易{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>📚 二手书交易</h2>
+  <a href="{{ url_for('books.create') }}" class="btn btn-primary">发布二手书</a>
+ </div>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  {% for book in books %}
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">{{ book.book_name }}</h5>
+          <span class="badge {% if book.status=='available' %}bg-success{% else %}bg-danger{% endif %}">
+            {% if book.status=='available' %}在售{% else %}已售{% endif %}
+          </span>
+        </div>
+        <p class="card-text">作者：{{ book.author or '未知' }}</p>
+        <p class="card-text">价格：<strong class="text-danger">¥{{ '%.2f'|format(book.price or 0) }}</strong></p>
+        <p class="card-text">成色：{{ book.condition or '未填写' }}</p>
+        <p class="card-text text-muted">发布时间：{{ book.create_time.strftime('%Y-%m-%d %H:%M') }}</p>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col">
+    <div class="alert alert-info">暂无二手书信息</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

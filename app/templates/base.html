@@ -19,11 +19,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/auth') %}active{% endif %}" href="/auth/">认证</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/lost') %}active{% endif %}" href="{{ url_for('lost_found.index') }}">失物招领</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/books') %}active{% endif %}" href="/books/">二手书</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/courses') %}active{% endif %}" href="/courses/">课程</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/study') %}active{% endif %}" href="{{ url_for('study_groups.index') }}">学习小组</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/auth') %}active{% endif %}" href="{{ url_for('auth.index') }}">认证</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/lost_found') or request.path.startswith('/lost-') %}active{% endif %}" href="{{ url_for('lost_found.index') }}">失物招领</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/books') %}active{% endif %}" href="{{ url_for('books.index') }}">二手书</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/courses') %}active{% endif %}" href="{{ url_for('courses.index') }}">课程</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/study_groups') %}active{% endif %}" href="{{ url_for('study_groups.index') }}">学习小组</a></li>
           </ul>
           <ul class="navbar-nav align-items-center">
             {% if current_user.is_authenticated %}
@@ -34,6 +34,18 @@
               <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">登录</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">注册</a></li>
             {% endif %}
+            <li class="nav-item dropdown ms-2">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                学校：{{ current_school.name if current_school else '未选择' }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('school.select') }}">切换学校</a></li>
+                {% if current_school %}
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-item-text text-muted">{{ current_school.province }} · {{ current_school.city }}</span></li>
+                {% endif %}
+              </ul>
+            </li>
             <li class="nav-item ms-2">
               <button id="themeToggle" class="btn btn-outline-primary btn-sm">切换主题</button>
             </li>

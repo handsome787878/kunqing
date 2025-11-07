@@ -50,50 +50,56 @@ def create_app():
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>鲲擎校园 - 校园生活助手</title>
             <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+            <script defer src="{{ url_for('static', filename='js/tilt.js') }}"></script>
         </head>
         <body>
             <div class="container">
                 <div class="main-content">
-                    <h1>🎓 鲲擎校园</h1>
-                    <p>您的专属校园生活助手，让校园生活更便捷、更精彩！</p>
+                    <div class="hero-3d">
+                        <div class="hero-copy">
+                            <h1>🎓 鲲擎校园</h1>
+                            <p>您的专属校园生活助手，让校园生活更便捷、更精彩！</p>
+                        </div>
+                        <div class="hero-orb" aria-hidden="true"></div>
+                    </div>
                     
                     <div class="nav-menu">
-                        <div class="nav-card">
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('auth.login') }}">
                                 🔐 用户登录
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">登录您的账户</p>
                             </a>
                         </div>
-                        
-                        <div class="nav-card">
+
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('auth.register') }}">
                                 📝 用户注册
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">创建新账户</p>
                             </a>
                         </div>
-                        
-                        <div class="nav-card">
+
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('lost_found.index') }}">
                                 🔍 失物招领
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">找回丢失物品</p>
                             </a>
                         </div>
-                        
-                        <div class="nav-card">
+
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('books.index') }}">
                                 📚 二手书交易
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">买卖二手教材</p>
                             </a>
                         </div>
-                        
-                        <div class="nav-card">
+
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('courses.index') }}">
                                 🎯 课程评价
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">分享课程体验</p>
                             </a>
                         </div>
-                        
-                        <div class="nav-card">
+
+                        <div class="nav-card" data-tilt>
                             <a href="{{ url_for('study_groups.index') }}">
                                 👥 学习小组
                                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">组建学习团队</p>

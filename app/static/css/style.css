@@ -307,3 +307,230 @@ a:hover {
     margin: 0;
     color: #333;
 }
+/* =============================
+   Global Theme Enhancements
+   ============================= */
+:root {
+  --brand-primary: #4f46e5; /* indigo-600 */
+  --brand-primary-dark: #3730a3;
+  --brand-accent: #06b6d4; /* cyan-500 */
+  --text-primary: #1f2937; /* gray-800 */
+  --text-muted: #6b7280;   /* gray-500 */
+  --bg-soft: #f8fafc;      /* gray-50 */
+  --card-bg: #ffffff;
+  --card-shadow: 0 8px 24px rgba(31, 41, 55, 0.12);
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --bg-gradient-start: #eef2ff; /* indigo-50 */
+  --bg-gradient-end: #e0f2fe;   /* sky-100 */
+}
+
+body {
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+  min-height: 100vh;
+}
+
+/* Navbar spacing & subtle backdrop */
+.navbar {
+  backdrop-filter: saturate(180%) blur(6px);
+  background-color: rgba(255,255,255,0.85);
+  border-bottom: 1px solid rgba(15,23,42,0.06);
+}
+.navbar .nav-link {
+  padding: 0.5rem 0.75rem;
+}
+.navbar .nav-link.active {
+  color: var(--brand-primary) !important;
+  font-weight: 600;
+  position: relative;
+}
+.navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.3rem;
+  width: 100%;
+  height: 2px;
+  background: var(--brand-primary);
+  border-radius: 2px;
+}
+
+/* Main content wrapper spacing */
+.main-content {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+/* Cards: smoother corners and stronger hover */
+.card {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: 0 1px 3px rgba(31,41,55,0.06);
+  background-color: var(--card-bg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow);
+}
+.card-header {
+  background: linear-gradient(180deg, rgba(248,250,252,0.9), rgba(248,250,252,0.6));
+  border-bottom: 1px solid rgba(15,23,42,0.06);
+}
+
+/* Buttons: unify primary styling */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  border: none;
+  box-shadow: 0 6px 16px rgba(79,70,229,0.25);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--brand-primary-dark), var(--brand-primary));
+  box-shadow: 0 8px 20px rgba(79,70,229,0.35);
+}
+.btn-outline-primary {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.btn-outline-primary:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+/* Forms: inputs and labels */
+.form-label {
+  color: var(--text-muted);
+}
+.form-control,
+.form-select {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(15,23,42,0.12);
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 0.2rem rgba(79,70,229,0.15);
+}
+
+/* Pagination unified look */
+.pagination .page-link {
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+.pagination .page-item.active .page-link {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+.pagination .page-link:hover {
+  color: var(--brand-primary);
+}
+
+/* Links */
+a {
+  color: var(--brand-primary);
+}
+a:hover {
+  color: var(--brand-primary-dark);
+}
+
+/* Section headings */
+h1, h2, h3, h4 {
+  color: var(--text-primary);
+}
+
+/* Utility: muted text */
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* =============================
+   Frosted Glass for Auth Cards
+   ============================= */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 30px rgba(31,41,55,0.12);
+}
+
+/* =============================
+   Homepage 3D Nav Cards
+   ============================= */
+.nav-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  perspective: 1000px;
+}
+.nav-card {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.nav-card a {
+  display: block;
+  padding: 16px;
+}
+.nav-card:hover {
+  box-shadow: var(--card-shadow);
+}
+
+/* =============================
+   Homepage 3D Hero Section
+   ============================= */
+.hero-3d {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.hero-orb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,255,255,0.9), rgba(255,255,255,0.6), transparent),
+              conic-gradient(from 180deg at 50% 50%, var(--brand-primary), var(--brand-accent), var(--brand-primary));
+  filter: saturate(120%);
+  box-shadow: 0 30px 60px rgba(79,70,229,0.25);
+  transform: rotateX(12deg) rotateY(-8deg);
+  animation: orbFloat 6s ease-in-out infinite;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: rotateX(12deg) rotateY(-8deg) translateY(0); }
+  50% { transform: rotateX(12deg) rotateY(-8deg) translateY(-8px); }
+}
+.hero-copy h1 {
+  margin: 0 0 8px;
+}
+.hero-copy p {
+  margin: 0;
+  color: var(--text-muted);
+}
+@media (max-width: 992px) {
+  .hero-3d { grid-template-columns: 1fr; }
+}
+
+/* =============================
+   Dark Theme Variables
+   ============================= */
+html[data-theme="dark"] {
+  --brand-primary: #60a5fa; /* blue-400 */
+  --brand-primary-dark: #1d4ed8; /* blue-700 */
+  --brand-accent: #22d3ee; /* cyan-400 */
+  --text-primary: #e5e7eb; /* gray-200 */
+  --text-muted: #9ca3af;   /* gray-400 */
+  --bg-gradient-start: #0f172a; /* slate-900 */
+  --bg-gradient-end: #1f2937;   /* gray-800 */
+  --card-bg: #111827; /* gray-900 */
+}
+html[data-theme="dark"] .navbar {
+  background-color: rgba(17, 24, 39, 0.85);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+html[data-theme="dark"] .card-header {
+  background: linear-gradient(180deg, rgba(17,24,39,0.9), rgba(17,24,39,0.6));
+  border-bottom-color: rgba(255,255,255,0.08);
+}

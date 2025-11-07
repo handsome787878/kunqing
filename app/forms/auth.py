@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+import re
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import (
     DataRequired,
@@ -53,3 +54,8 @@ class PasswordResetForm(FlaskForm):
         validators=[DataRequired(), EqualTo("new_password", message="两次密码不一致")],
     )
     submit = SubmitField("重置密码")
+
+    def validate_new_password(self, field):
+        # 至少包含字母和数字，长度在8位以上
+        if not re.match(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$", field.data or ""):
+            raise ValidationError("密码需包含字母和数字，且至少8位")

@@ -126,10 +126,33 @@ class SimpleUser:
     
     def check_password(self, password):
         """验证密码"""
-        # 简单的SHA256哈希验证（用于演示）
-        import hashlib
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        return password_hash == self.password_hash
+        # 兼容历史数据：优先按 bcrypt 校验；若为旧版 SHA256，则回退并自动迁移为 bcrypt
+        import bcrypt, hashlib, sqlite3
+        stored = self.password_hash or ""
+        try:
+            if stored.startswith("$2"):
+                # bcrypt 格式
+                return bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8'))
+            else:
+                # 旧版 hex(SHA256)
+                sha_hex = hashlib.sha256(password.encode('utf-8')).hexdigest()
+                if sha_hex == stored:
+                    # 成功后迁移为 bcrypt，提升安全性
+                    try:
+                        new_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                        conn = sqlite3.connect(DB_PATH)
+                        cur = conn.cursor()
+                        cur.execute('UPDATE users SET password_hash = ? WHERE id = ?', (new_hash, self.id))
+                        conn.commit()
+                        conn.close()
+                        self.password_hash = new_hash
+                    except Exception:
+                        # 迁移失败不影响当前登录
+                        pass
+                    return True
+                return False
+        except Exception:
+            return False
     
     def is_admin_user(self):
         """检查是否为管理员用户"""
@@ -271,6 +294,56 @@ class SimpleUser:
                 last_login=row[11]
             )
         return None
+
+    @staticmethod
+    def update_profile(user_id, real_name=None, college=None, major=None, grade=None, phone=None):
+        """更新用户资料并返回最新的用户对象"""
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # 仅更新提供的字段
+        fields = []
+        values = []
+        if real_name is not None:
+            fields.append('real_name = ?')
+            values.append(real_name)
+        if college is not None:
+            fields.append('college = ?')
+            values.append(college)
+        if major is not None:
+            fields.append('major = ?')
+            values.append(major)
+        if grade is not None:
+            fields.append('grade = ?')
+            values.append(grade)
+        if phone is not None:
+            fields.append('phone = ?')
+            values.append(phone)
+
+        if not fields:
+            conn.close()
+            return SimpleUser.get_by_id(user_id)
+
+        sql = f"UPDATE users SET {', '.join(fields)} WHERE id = ?"
+        values.append(user_id)
+        cursor.execute(sql, tuple(values))
+        conn.commit()
+        conn.close()
+
+        # 返回最新的用户对象
+        return SimpleUser.get_by_id(user_id)
+
+    @staticmethod
+    def update_password(user_id, new_password):
+        """更新用户密码为 bcrypt 哈希"""
+        import bcrypt
+        password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET password_hash = ? WHERE id = ?', (password_hash, user_id))
+        conn.commit()
+        conn.close()
+        return True
     
 
 class SimpleLostFound:

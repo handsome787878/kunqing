@@ -3,7 +3,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>学习小组</h2>
-  <a href="{{ url_for('study_groups.create_group') }}" class="btn btn-outline-primary">创建小组</a>
+  <a href="{{ url_for('study_groups.create_group') }}" class="btn btn-primary">创建小组</a>
  </div>
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
   {% for group in groups %}

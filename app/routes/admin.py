@@ -252,7 +252,7 @@ def user_detail(user_id):
     return render_template("admin/user_detail.html", user=mock_user, user_stats=user_stats)
 
 
-@admin_bp.route("/users/<int:user_id>/toggle_admin", methods=["POST"])
+@admin_bp.route("/users/<int:user_id>/toggle_admin", methods=["POST"], endpoint="toggle_admin")
 @super_admin_required
 def toggle_user_admin(user_id):
     """切换用户管理员状态"""

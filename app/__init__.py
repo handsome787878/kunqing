@@ -1,11 +1,15 @@
 from flask import Flask, render_template, render_template_string, session
 from flask_login import LoginManager
 from config import Config
+from exts import mail
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # 初始化 Flask-Mail
+    mail.init_app(app)
 
     # 接入 SQLAlchemy（正式模型）并兼容简化模型
     from .models import db, User, School

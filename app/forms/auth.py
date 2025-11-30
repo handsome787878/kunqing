@@ -24,7 +24,8 @@ class RegisterForm(FlaskForm):
 
     def validate_email(self, field):
         try:
-            validate_email(field.data)
+            # 仅做语法与规范化校验，跳过可送达性（DNS）检查，避免本机DNS配置异常导致报错
+            validate_email(field.data, check_deliverability=False)
         except EmailNotValidError as e:
             raise ValidationError(str(e))
 

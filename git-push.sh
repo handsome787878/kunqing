@@ -1,6 +1,24 @@
 #!/bin/bash
 # Git 自动上传脚本 - 鲲擎校园系统
 # 使用方法: ./git-push.sh "你的提交信息"
+# 使用说明（Linux/Mac/Bash）
+# - 作用：自动执行 git add/commit/push，一键推送到远端。
+# - 先决条件：当前目录为 Git 仓库（存在 .git），且已配置远端 origin。
+# - 执行前：赋予执行权限 `chmod +x git-push.sh`。
+# - 提交者信息：请先设置真实姓名与邮箱，避免出现占位的 "your name"。
+#   git config --global user.name "龚精奎"
+#   git config --global user.email "2713878912@qq.com"
+# - 远端仓库：确认为 Gitee 仓库。
+#   git remote -v  # 应显示 origin  https://gitee.com/ospuer/kunqing.git
+# - 参数说明（位置参数）：
+#   1 提交信息（默认含时间戳）
+#   2 分支名，脚本默认是 main；本仓库当前分支为 master，建议传入 "master"
+#   3 是否强制推送（true/false，默认 false）
+# - 示例：
+#   ./git-push.sh "" master                                  # 使用默认提交信息推送到 master
+#   ./git-push.sh "docs: 更新部署上线文档" master           # 自定义提交信息
+#   ./git-push.sh "fix: 重置历史" master true               # 强制推送（谨慎使用）
+# - 推送失败处理：脚本会自动尝试 git pull 后重推，如仍失败需手动解决冲突。
 
 # 颜色定义
 RED='\033[0;31m'

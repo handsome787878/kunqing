@@ -4,15 +4,14 @@
 import os
 import uuid
 import hashlib
-import smtplib
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import List, Dict, Any, Tuple, Optional
 
 from flask import current_app, request, url_for
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+from flask_mail import Message
+from exts import mail
 
 # 注释掉PIL导入，避免依赖问题
 # from PIL import Image
@@ -47,47 +46,18 @@ def verify_captcha(email: str, code: str) -> bool:
 
 
 def send_email(to_email: str, subject: str, body: str) -> bool:
-    """发送邮件，支持 TLS 与 SSL，并记录异常日志"""
-    server = current_app.config.get("MAIL_SERVER")
-    port = int(current_app.config.get("MAIL_PORT") or 587)
-    username = current_app.config.get("MAIL_USERNAME")
-    password = current_app.config.get("MAIL_PASSWORD")
-    sender = current_app.config.get("MAIL_DEFAULT_SENDER") or username
-    use_tls = current_app.config.get("MAIL_USE_TLS", True)
-    use_ssl = current_app.config.get("MAIL_USE_SSL", False)
-
-    if not server or not sender:
-        current_app.logger.warning("邮件配置缺失：MAIL_SERVER 或 MAIL_DEFAULT_SENDER 未设置")
+    """使用 Flask-Mail 发送邮件，记录异常日志"""
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER") or current_app.config.get("MAIL_USERNAME")
+    if not sender:
+        current_app.logger.warning("邮件配置缺失：MAIL_DEFAULT_SENDER 或 MAIL_USERNAME 未设置")
         return False
 
-    message = MIMEText(body, "plain", "utf-8")
-    message["Subject"] = subject
-    message["From"] = sender
-    message["To"] = to_email
-
     try:
-        # 记录详细日志便于排查
-        current_app.logger.info(
-            f"准备发送邮件: server={server}, port={port}, use_ssl={use_ssl}, use_tls={use_tls}, sender={sender}, to={to_email}"
-        )
-        # 根据端口或配置选择 SSL/TLS
-        if use_ssl or port == 465:
-            smtp = smtplib.SMTP_SSL(server, port)
-        else:
-            smtp = smtplib.SMTP(server, port)
-            if use_tls:
-                try:
-                    smtp.starttls()
-                except Exception:
-                    current_app.logger.warning("SMTP starttls 失败，继续尝试登录发送")
-
-        if username and password:
-            smtp.login(username, password)
-        smtp.sendmail(sender, [to_email], message.as_string())
-        smtp.quit()
+        msg = Message(subject=subject, recipients=[to_email], body=body, sender=sender)
+        mail.send(msg)
         return True
     except Exception:
-        current_app.logger.exception("邮件发送失败")
+        current_app.logger.exception("邮件发送失败（Flask-Mail）")
         return False
 
 

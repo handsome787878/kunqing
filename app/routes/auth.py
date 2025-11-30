@@ -200,6 +200,21 @@ def send_reset_captcha():
     return jsonify({"sent": ok})
 
 
+# 邮件发送测试路由（便于验证配置是否正确）
+@auth_bp.route("/test-mail", methods=["POST"])
+def test_mail():
+    data = request.get_json() if request.is_json else None
+    to = (request.form.get("to") if request.form else None) or (data or {}).get("to")
+    subject = (request.form.get("subject") if request.form else None) or (data or {}).get("subject") or "测试邮件"
+    body = (request.form.get("body") if request.form else None) or (data or {}).get("body") or "这是一封测试邮件。"
+    if not to:
+        return jsonify({"error": "缺少收件人 to"}), 400
+    start = time.time()
+    ok = send_email(to, subject, body)
+    duration_ms = int((time.time() - start) * 1000)
+    return jsonify({"sent": ok, "to": to, "subject": subject, "duration_ms": duration_ms})
+
+
 @auth_bp.route("/send-register-captcha", methods=["POST"])
 def send_register_captcha():
     email = request.form.get("email")

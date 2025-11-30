@@ -1,5 +1,22 @@
 # Git 自动上传脚本 - 鲲擎校园系统
 # 使用方法: .\git-push.ps1 -message "你的提交信息"
+# 使用说明（Windows/PowerShell）
+# - 作用：自动执行 git add/commit/push，一键推送到远端。
+# - 先决条件：当前目录为 Git 仓库（存在 .git），且已配置远端 origin。
+# - 提交者信息：请先设置真实姓名与邮箱，避免出现占位的 "your name"。
+#   git config --global user.name "龚精奎"
+#   git config --global user.email "2713878912@qq.com"
+# - 远端仓库：确认为 Gitee 仓库。
+#   git remote -v  # 应显示 origin  https://gitee.com/ospuer/kunqing.git
+# - 参数说明：
+#   -message  提交信息，默认包含时间戳。
+#   -branch   目标分支，脚本默认是 main；本仓库当前分支为 master，请显式传入 "master"。
+#   -force    是否使用强制推送（有风险，默认 false）。
+# - 示例：
+#   .\git-push.ps1 -branch "master"                                   # 使用默认提交信息推送到 master
+#   .\git-push.ps1 -message "docs: 更新部署文档" -branch "master"   # 自定义提交信息
+#   .\git-push.ps1 -message "fix: 重置历史" -branch "master" -force  # 强制推送（谨慎使用）
+# - 推送失败处理：脚本会自动尝试 git pull 后重推，如仍失败需手动解决冲突。
 
 param(
     [string]$message = "Update: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')",

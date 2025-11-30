@@ -1,96 +1,210 @@
-{% extends 'base.html' %}
-{% block title %}首页 - Kunqing Campus{% endblock %}
-{% block content %}
-<section class="text-center mb-4">
-  <h1 class="display-5">🎓 鲲擎校园</h1>
-  <p class="text-muted">您的校园生活助手，让学习与交流更便捷</p>
-</section>
+{% extends "base.html" %}
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">🔐 用户认证</h5>
-        {% if current_user.is_authenticated %}
-          <p class="card-text text-muted">已登录：{{ current_user.email or current_user.student_id }}</p>
-          <div class="d-flex gap-2">
-            <a class="btn btn-primary" href="{{ url_for('auth.profile') }}">已登录，去资料管理</a>
-            <a class="btn btn-link" href="{{ url_for('auth.index') }}">前往认证中心</a>
-          </div>
-        {% else %}
-          <p class="card-text text-muted">未登录：请先登录或注册</p>
-          <div class="d-flex gap-2">
-            <a class="btn btn-primary" href="{{ url_for('auth.login') }}">未登录，去登录</a>
-            <a class="btn btn-link" href="{{ url_for('auth.index') }}">前往认证中心</a>
-          </div>
-        {% endif %}
-      </div>
+{% block title %}首页{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: var(--radius-lg);
+        padding: 3rem 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 40px -10px rgba(118, 75, 162, 0.4);
+    }
+
+    .hero-pattern {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-image: radial-gradient(circle at 20% 150%, rgba(255,255,255,0.3) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .feature-card {
+        height: 100%;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .bg-icon-blue { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; }
+    .bg-icon-purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    .bg-icon-orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+    .bg-icon-green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 欢迎横幅 -->
+    <div class="hero-section">
+        <div class="hero-pattern"></div>
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-lg-7">
+                <h1 class="display-5 fw-bold mb-3">
+                    {% if current_user.is_authenticated %}
+                        <!-- 修改：这里也把 username 改掉 -->
+                        早安，{{ current_user.real_name or current_user.student_id }}！
+                    {% else %}
+                        欢迎来到鲲擎校园
+                    {% endif %}
+                </h1>
+                <p class="lead opacity-90 mb-4">这里是你的校园生活助手。无论是寻找课程评价、失物招领，还是寻找学习伙伴，我们都为你准备好了。</p>
+                {% if not current_user.is_authenticated %}
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm">立即加入</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light fw-bold px-4 py-2 rounded-pill">登录</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-end">
+                <img src="https://cdn-icons-png.flaticon.com/512/3011/3011270.png" alt="Campus Life" style="max-width: 300px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">🧭 失物招领</h5>
-        <p class="card-text text-muted">发布与浏览校园失物信息</p>
-        <a class="btn btn-primary" href="{{ url_for('lost_found.index') }}">进入模块</a>
-      </div>
+
+    <!-- 核心功能网格 -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('courses.index') }}" class="text-decoration-none">
+                <div class="card-modern feature-card">
+                    <div class="feature-icon bg-icon-blue">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark">课程评价</h4>
+                        <p class="text-muted small mb-0">查看真实课程反馈，避雷选好课，分享你的学习心得。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('lost_found.index') }}" class="text-decoration-none">
+                <div class="card-modern feature-card">
+                    <div class="feature-icon bg-icon-orange">
+                        <i class="bi bi-search-heart"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark">失物招领</h4>
+                        <p class="text-muted small mb-0">丢失物品不用慌，发布信息全校帮，拾金不昧有温情。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('books.index') }}" class="text-decoration-none">
+                <div class="card-modern feature-card">
+                    <div class="feature-icon bg-icon-green">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark">二手书籍</h4>
+                        <p class="text-muted small mb-0">教材循环利用，低价淘好书，知识传递更环保。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('study_groups.index') }}" class="text-decoration-none">
+                <div class="card-modern feature-card">
+                    <div class="feature-icon bg-icon-purple">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-dark">学习小组</h4>
+                        <p class="text-muted small mb-0">寻找志同道合的伙伴，组队自习、竞赛，共同进步。</p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">🏫 学校定位</h5>
-        {% if current_school %}
-          <p class="card-text">当前学校：<strong>{{ current_school.name }}</strong></p>
-          <p class="card-text text-muted">位置：{{ current_school.province }} · {{ current_school.city }}</p>
-          <div class="d-flex gap-2">
-            <a class="btn btn-outline-primary" href="{{ url_for('school.select') }}">切换学校</a>
-          </div>
-        {% else %}
-          <p class="card-text">尚未选择学校</p>
-          <p class="card-text text-muted">请选择所在学校以显示对应内容</p>
-          <div class="d-flex gap-2">
-            <a class="btn btn-primary" href="{{ url_for('school.select') }}">选择所在学校</a>
-          </div>
-        {% endif %}
-      </div>
+
+    <!-- 底部信息展示区 -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-megaphone me-2 text-primary"></i>最新动态</h5>
+                    <a href="#" class="text-decoration-none small">查看更多</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    <!-- 示例数据，实际应从后端传入 -->
+                    <div class="list-group-item border-0 px-0 py-3 d-flex align-items-center">
+                        <span class="badge bg-light text-primary me-3">通知</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">期末考试周图书馆开放时间调整</h6>
+                            <small class="text-muted">2小时前发布</small>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                    <div class="list-group-item border-0 px-0 py-3 d-flex align-items-center">
+                        <span class="badge bg-light text-success me-3">活动</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">第十届校园编程马拉松开始报名</h6>
+                            <small class="text-muted">昨天发布</small>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-modern p-4 h-100 text-center d-flex flex-column justify-content-center">
+                <h5 class="fw-bold text-muted mb-4">平台数据</h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat-number">1.2k</div>
+                        <div class="small text-muted fw-bold">活跃用户</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-number">850</div>
+                        <div class="small text-muted fw-bold">课程评价</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-number">320</div>
+                        <div class="small text-muted fw-bold">成功寻回</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-number">150</div>
+                        <div class="small text-muted fw-bold">在售书籍</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">📚 二手书交易</h5>
-        <p class="card-text text-muted">买卖教材，节约成本更环保</p>
-        <a class="btn btn-primary" href="{{ url_for('books.index') }}">进入模块</a>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">📖 课程评价</h5>
-        <p class="card-text text-muted">查看课程信息与评价</p>
-        <a class="btn btn-primary" href="{{ url_for('courses.index') }}">进入模块</a>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">🤝 学习小组</h5>
-        <p class="card-text text-muted">创建与加入学习小组</p>
-        <a class="btn btn-primary" href="{{ url_for('study_groups.index') }}">进入模块</a>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title">🛡️ 管理后台</h5>
-        <p class="card-text text-muted">用户与内容管理（需要权限）</p>
-        <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">打开后台</a>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}

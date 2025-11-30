@@ -1,95 +1,248 @@
-<!doctype html>
-<html lang="zh-CN" data-bs-theme="light">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Kunqing Campus{% endblock %}</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <!-- 站点增强样式 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  </head>
-  <body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary mb-3">
-      <div class="container">
-        <a class="navbar-brand" href="/">Kunqing Campus</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/auth') %}active{% endif %}" href="{{ url_for('auth.index') }}">认证</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/lost_found') or request.path.startswith('/lost-') %}active{% endif %}" href="{{ url_for('lost_found.index') }}">失物招领</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/books') %}active{% endif %}" href="{{ url_for('books.index') }}">二手书</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/courses') %}active{% endif %}" href="{{ url_for('courses.index') }}">课程</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.path.startswith('/study_groups') %}active{% endif %}" href="{{ url_for('study_groups.index') }}">学习小组</a></li>
-          </ul>
-          <ul class="navbar-nav align-items-center">
-            {% if current_user.is_authenticated %}
-              <li class="nav-item"><span class="navbar-text">你好，{{ current_user.email or current_user.student_id }}</span></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.profile') }}">个人资料</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">退出</a></li>
-            {% else %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">登录</a></li>
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">注册</a></li>
-            {% endif %}
-            <li class="nav-item dropdown ms-2">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                学校：{{ current_school.name if current_school else '未选择' }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('school.select') }}">切换学校</a></li>
-                {% if current_school %}
-                <li><hr class="dropdown-divider"></li>
-                <li><span class="dropdown-item-text text-muted">{{ current_school.province }} · {{ current_school.city }}</span></li>
-                {% endif %}
-              </ul>
-            </li>
-            <li class="nav-item ms-2">
-              <button id="themeToggle" class="btn btn-outline-primary btn-sm">切换主题</button>
-            </li>
-          </ul>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}鲲擎校园{% endblock %} - 智慧校园服务</title>
+    
+    <!-- 【关键修改】使用国内 BootCDN 镜像加速 Bootstrap CSS -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 【关键修改】使用国内 BootCDN 镜像加速 Bootstrap Icons -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- 【已移除】Google Fonts (会导致国内加载极慢) -->
+    <!-- 使用系统默认字体代替，速度最快 -->
+    
+    <style>
+        :root {
+            --bg-body: #f4f7f6;
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --nav-backdrop: blur(16px);
+            --nav-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --text-dark: #1f2937;
+        }
+
+        body {
+            /* 优先使用系统自带的中文字体，无需下载 */
+            font-family: "PingFang SC", "Microsoft YaHei", "SimHei", system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 24px 24px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 100px;
+        }
+
+        /* === 悬浮式玻璃导航栏 === */
+        .navbar-floating {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 1200px;
+            background: var(--nav-bg);
+            backdrop-filter: var(--nav-backdrop);
+            -webkit-backdrop-filter: var(--nav-backdrop);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: var(--nav-shadow);
+            z-index: 1030;
+            padding: 0.7rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.4rem;
+            background: linear-gradient(45deg, #4f46e5, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #4b5563 !important;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem !important;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            margin: 0 2px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color) !important;
+            background-color: rgba(79, 70, 229, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .btn-login {
+            background-color: var(--primary-color);
+            color: white !important;
+            padding: 0.5rem 1.5rem !important;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .btn-login:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-top: 15px !important;
+            animation: slideUp 0.3s ease forwards;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+            color: var(--primary-color);
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            background: white;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #6b7280;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- 悬浮导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-floating">
+        <div class="container-fluid px-0">
+            <!-- Logo -->
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="bi bi-tsunami"></i> 鲲擎校园
+            </a>
+
+            <!-- 移动端折叠按钮 -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- 导航链接内容 -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="bi bi-house-door me-1"></i>首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('courses.index') }}">
+                            <i class="bi bi-journal-check me-1"></i>课程评价
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('lost_found.index') }}">
+                            <i class="bi bi-search me-1"></i>失物招领
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('books.index') }}">
+                            <i class="bi bi-book me-1"></i>二手书籍
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('study_groups.index') }}">
+                            <i class="bi bi-people me-1"></i>学习小组
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- 右侧用户区域 -->
+                <ul class="navbar-nav align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px;">
+                                    <!-- 修改：使用 real_name 或 student_id 的首字母 -->
+                                    {{ (current_user.real_name or current_user.student_id)[0] | upper }}
+                                </div>
+                                <!-- 修改：优先显示真实姓名，否则显示学号 -->
+                                <span class="fw-bold text-dark">{{ current_user.real_name or current_user.student_id }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user.is_admin %}
+                                <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>管理后台</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="bi bi-person-circle me-2"></i>个人中心</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-2">
+                            <a class="nav-link btn-login" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-person-fill me-1"></i>登录 / 注册
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-      </div>
     </nav>
 
-    <!-- 闪现消息 -->
-    <div class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+    <!-- 全局消息提示 -->
+    <div class="container" style="margin-top: 1rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
 
-    <!-- 内容容器 -->
-    <main class="container mb-5">
-      <div class="main-content">
+    <!-- 主内容区 -->
+    <main>
         {% block content %}{% endblock %}
-      </div>
     </main>
-    <footer class="border-top py-3 mt-auto" style="background-color: rgba(255,255,255,0.85);">
-      <div class="container d-flex justify-content-between align-items-center">
-        <span class="text-muted">© 2025 校园信息平台</span>
-        <span class="text-muted">打造更好用的课程、书籍与小组社区</span>
-      </div>
-    </footer>
 
     <!-- 页脚 -->
-    <footer class="bg-body-tertiary py-3 mt-auto">
-      <div class="container text-center text-muted">
-        &copy; {{ 2025 }} Kunqing Campus · 使用 Bootstrap 5 构建
-      </div>
+    <footer>
+        <div class="container">
+            <p class="mb-1 fw-bold">&copy; {{ now.year if now else '2025' }} 鲲擎校园</p>
+            <small class="text-muted">Designed with <i class="bi bi-heart-fill text-danger"></i> for Students</small>
+        </div>
     </footer>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jE+2l5n2Q6wYw5N" crossorigin="anonymous"></script>
-    <script defer src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  </body>
-  </html>
+    <!-- 【关键修改】使用国内 BootCDN 镜像加速 Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

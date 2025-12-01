@@ -126,6 +126,18 @@ def login():
             remember = form.remember_me.data
 
             user = User.query.filter((User.student_id == account) | (User.email == account)).first()
+            
+            # 添加调试信息
+            print(f"=== 登录调试 ===")
+            print(f"输入账号: {account}")
+            print(f"查找到用户: {user}")
+            if user:
+                print(f"用户ID: {user.id}, 学号: {user.student_id}")
+                print(f"密码哈希前50字符: {user.password_hash[:50]}")
+                check_result = user.check_password(password)
+                print(f"密码验证结果: {check_result}")
+            print(f"================")
+            
             if user and user.check_password(password):
                 login_user(user, remember=remember)
                 user.last_login = datetime.utcnow()

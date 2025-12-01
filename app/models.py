@@ -2,12 +2,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
 import bcrypt
 from datetime import datetime
+from flask_login import UserMixin
 
 
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)

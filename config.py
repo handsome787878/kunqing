@@ -7,10 +7,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     # 基本配置
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change'
     
-    # 数据库配置 - 暂时使用SQLite，确保数据持久化
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///kunqing.sqlite'
+    # 修改这一行，确保文件名是 kunqing.sqlite
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'kunqing.sqlite')
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True  # 开发环境下显示SQL语句
 
